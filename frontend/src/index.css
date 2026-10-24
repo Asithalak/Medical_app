@@ -1,0 +1,129 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 5% 13%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 5% 13%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 5% 13%;
+
+    --primary: 214 100% 41%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 195 70% 95%;
+    --secondary-foreground: 214 100% 41%;
+
+    --muted: 210 20% 96%;
+    --muted-foreground: 240 4% 53%;
+
+    --accent: 193 79% 63%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 20% 90%;
+    --input: 214 20% 90%;
+    --ring: 214 100% 41%;
+
+    --radius: 0.625rem;
+
+    --sidebar-background: 210 33% 98%;
+    --sidebar-foreground: 215 25% 25%;
+    --sidebar-primary: 214 100% 41%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 195 70% 95%;
+    --sidebar-accent-foreground: 214 100% 41%;
+    --sidebar-border: 214 20% 92%;
+    --sidebar-ring: 214 100% 41%;
+
+    --medical-success: 152 60% 40%;
+    --medical-warning: 38 92% 50%;
+    --medical-urgent: 0 72% 51%;
+
+    --gradient-start: 207 97% 43%;
+    --gradient-end: 193 79% 63%;
+  }
+
+  .dark {
+    --background: 215 25% 8%;
+    --foreground: 210 20% 96%;
+
+    --card: 215 25% 11%;
+    --card-foreground: 210 20% 96%;
+
+    --popover: 215 25% 11%;
+    --popover-foreground: 210 20% 96%;
+
+    --primary: 214 100% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 215 20% 18%;
+    --secondary-foreground: 210 20% 96%;
+
+    --muted: 215 20% 18%;
+    --muted-foreground: 215 15% 60%;
+
+    --accent: 193 79% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 210 20% 96%;
+
+    --border: 215 20% 20%;
+    --input: 215 20% 20%;
+    --ring: 214 100% 55%;
+
+    --sidebar-background: 215 25% 10%;
+    --sidebar-foreground: 210 20% 90%;
+    --sidebar-primary: 214 100% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 20% 15%;
+    --sidebar-accent-foreground: 210 20% 96%;
+    --sidebar-border: 215 20% 18%;
+    --sidebar-ring: 214 100% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  .gradient-primary {
+    background: linear-gradient(135deg, hsl(207, 97%, 43%), hsl(193, 79%, 63%));
+  }
+
+  .gradient-primary-text {
+    background: linear-gradient(135deg, hsl(207, 97%, 43%), hsl(193, 79%, 63%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .gradient-logo {
+    background: linear-gradient(135deg, hsl(145, 100%, 34%), hsl(214, 100%, 41%));
+  }
+
+  .gradient-footer {
+    background: linear-gradient(135deg, hsl(214, 100%, 41%), hsl(193, 79%, 63%));
+  }
+}

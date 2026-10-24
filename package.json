@@ -1,0 +1,16 @@
+{
+  "name": "embassy-aid-connect",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npm run dev --prefix frontend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:server": "npm run dev --prefix server",
+    "build": "npm run build --prefix frontend && npm run build --prefix server",
+    "build:frontend": "npm run build --prefix frontend",
+    "build:server": "npm run build --prefix server",
+    "start": "npm start --prefix server",
+    "db:init": "npm run db:init --prefix server"
+  }
+}

@@ -1,0 +1,67 @@
+import type { Request, Response } from 'express';
+import crypto from 'crypto';
+import { query, isDbConnected } from '../config/db.js';
+
+export async function createPatient(req: Request, res: Response): Promise<void> {
+  const {
+    _full_name, full_name,
+    _email, email,
+    _phone, phone,
+    _date_of_birth, date_of_birth,
+    _nationality, nationality,
+    _passport_number, passport_number,
+    _passport_expiry, passport_expiry,
+    _hotel_address, hotel_address,
+    _emergency_contact_name, emergency_contact_name,
+    _emergency_contact_phone, emergency_contact_phone,
+    _emergency_contact_relationship, emergency_contact_relationship,
+    _consent_given, consent_given,
+    _user_id, user_id,
+  } = req.body;
+
+  const fullName = _full_name || full_name;
+  const pEmail = _email || email;
+  const pPhone = _phone || phone;
+  const dob = _date_of_birth || date_of_birth;
+  const pNat = _nationality || nationality;
+  const passNum = _passport_number || passport_number;
+  const passExp = _passport_expiry || passport_expiry || null;
+  const hotel = _hotel_address || hotel_address || null;
+  const emergName = _emergency_contact_name || emergency_contact_name || '';
+  const emergPhone = _emergency_contact_phone || emergency_contact_phone || '';
+  const emergRel = _emergency_contact_relationship || emergency_contact_relationship || null;
+  const consent = _consent_given !== undefined ? _consent_given : (consent_given !== undefined ? consent_given : true);
+  const uId = _user_id || user_id || null;
+
+  const trackingCode = crypto.randomBytes(3).toString('hex').toUpperCase();
+
+  try {
+    if (isDbConnected()) {
+      const sql = `
+        INSERT INTO patients (
+          full_name, email, phone, date_of_birth, nationality,
+          passport_number, passport_expiry, hotel_address,
+          emergency_contact_name, emergency_contact_phone,
+          emergency_contact_relationship, consent_given, tracking_code, user_id
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+        RETURNING id, tracking_code
+      `;
+
+      const result = await query(sql, [
+        fullName, pEmail, pPhone, dob, pNat,
+        passNum, passExp, hotel,
+        emergName, emergPhone, emergRel,
+        consent, trackingCode, uId
+      ]);
+
+      res.status(201).json({ data: result.rows[0] });
+      return;
+    }
+
+    // In-memory fallback
+    const id = `pat_${Date.now()}`;
+    res.status(201).json({ data: { id, tracking_code: trackingCode } });
+  } catch (err: any) {
+    res.status(500).json({ message: 'Failed to create patient', error: err.message });
+  }
+}
