@@ -62,8 +62,9 @@ export async function updateConsultationType(req: Request, res: Response): Promi
         SET display_name = COALESCE($1, display_name),
             description = COALESCE($2, description),
             price_cents = COALESCE($3, price_cents),
-            duration_minutes = COALESCE($4, duration_minutes)
-        WHERE id = $5
+            duration_minutes = COALESCE($4, duration_minutes),
+            updated_at = NOW()
+        WHERE id::text = $5 OR name = $5
         RETURNING *
       `;
       const result = await query(sql, [display_name, description, price_cents, duration_minutes, id]);
@@ -128,7 +129,7 @@ export async function getConsultations(req: Request, res: Response): Promise<voi
       `;
 
       if (isQueue) {
-        sql += ` WHERE c.status IN ('paid', 'scheduled', 'in_progress') ORDER BY c.priority_score DESC, c.created_at ASC`;
+        sql += ` WHERE c.status IN ('pending', 'paid', 'scheduled', 'in_progress') ORDER BY c.priority_score DESC, c.created_at ASC`;
       } else {
         sql += ` ORDER BY c.created_at DESC`;
       }

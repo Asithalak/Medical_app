@@ -13,6 +13,46 @@ import { patientIntakeSchema, type PatientIntakeForm } from "@/lib/validators";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 
+interface FormFieldProps {
+  name: string;
+  label: string;
+  type?: string;
+  required?: boolean;
+  placeholder?: string;
+  value?: string;
+  error?: string;
+  onChange: (value: string) => void;
+}
+
+function FormField({
+  name,
+  label,
+  type = "text",
+  required = true,
+  placeholder = "",
+  value = "",
+  error,
+  onChange,
+}: FormFieldProps) {
+  return (
+    <div>
+      <Label htmlFor={name}>
+        {label}
+        {required && <span className="text-destructive"> *</span>}
+      </Label>
+      <Input
+        id={name}
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className={error ? "border-destructive" : ""}
+      />
+      {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
+    </div>
+  );
+}
+
 export default function IntakeForm() {
   const [form, setForm] = useState<Partial<PatientIntakeForm>>({ consent_given: false as any });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -68,21 +108,6 @@ export default function IntakeForm() {
     navigate("/consultation/medical-precheck");
   };
 
-  const Field = ({ name, label, type = "text", required = true, placeholder = "" }: any) => (
-    <div>
-      <Label htmlFor={name}>{label}{required && <span className="text-destructive"> *</span>}</Label>
-      <Input
-        id={name}
-        type={type}
-        value={(form as any)[name] || ""}
-        onChange={(e) => update(name, e.target.value)}
-        placeholder={placeholder}
-        className={errors[name] ? "border-destructive" : ""}
-      />
-      {errors[name] && <p className="mt-1 text-xs text-destructive">{errors[name]}</p>}
-    </div>
-  );
-
   return (
     <PublicLayout>
       <div className="container py-8">
@@ -101,22 +126,73 @@ export default function IntakeForm() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-4">
                   <h3 className="font-semibold">Personal Details</h3>
-                  <Field name="full_name" label="Full Name (as on passport)" placeholder="John Smith" />
+                  <FormField
+                    name="full_name"
+                    label="Full Name (as on passport)"
+                    placeholder="John Smith"
+                    value={form.full_name}
+                    error={errors.full_name}
+                    onChange={(val) => update("full_name", val)}
+                  />
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <Field name="email" label="Email Address" type="email" placeholder="john@example.com" />
-                    <Field name="phone" label="Phone Number" placeholder="+1 234 567 8901" />
+                    <FormField
+                      name="email"
+                      label="Email Address"
+                      type="email"
+                      placeholder="john@example.com"
+                      value={form.email}
+                      error={errors.email}
+                      onChange={(val) => update("email", val)}
+                    />
+                    <FormField
+                      name="phone"
+                      label="Phone Number"
+                      placeholder="+1 234 567 8901"
+                      value={form.phone}
+                      error={errors.phone}
+                      onChange={(val) => update("phone", val)}
+                    />
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <Field name="date_of_birth" label="Date of Birth" type="date" />
-                    <Field name="nationality" label="Nationality" placeholder="British" />
+                    <FormField
+                      name="date_of_birth"
+                      label="Date of Birth"
+                      type="date"
+                      value={form.date_of_birth}
+                      error={errors.date_of_birth}
+                      onChange={(val) => update("date_of_birth", val)}
+                    />
+                    <FormField
+                      name="nationality"
+                      label="Nationality"
+                      placeholder="British"
+                      value={form.nationality}
+                      error={errors.nationality}
+                      onChange={(val) => update("nationality", val)}
+                    />
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   <h3 className="font-semibold">Passport Details</h3>
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <Field name="passport_number" label="Passport Number" placeholder="AB1234567" />
-                    <Field name="passport_expiry" label="Passport Expiry Date" type="date" required={false} />
+                    <FormField
+                      name="passport_number"
+                      label="Passport Number"
+                      placeholder="AB1234567"
+                      value={form.passport_number}
+                      error={errors.passport_number}
+                      onChange={(val) => update("passport_number", val)}
+                    />
+                    <FormField
+                      name="passport_expiry"
+                      label="Passport Expiry Date"
+                      type="date"
+                      required={false}
+                      value={form.passport_expiry}
+                      error={errors.passport_expiry}
+                      onChange={(val) => update("passport_expiry", val)}
+                    />
                   </div>
                 </div>
 
@@ -136,10 +212,32 @@ export default function IntakeForm() {
 
                 <div className="space-y-4">
                   <h3 className="font-semibold">Emergency Contact</h3>
-                  <Field name="emergency_contact_name" label="Contact Name" placeholder="Jane Smith" />
+                  <FormField
+                    name="emergency_contact_name"
+                    label="Contact Name"
+                    placeholder="Jane Smith"
+                    value={form.emergency_contact_name}
+                    error={errors.emergency_contact_name}
+                    onChange={(val) => update("emergency_contact_name", val)}
+                  />
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <Field name="emergency_contact_phone" label="Contact Phone" placeholder="+1 234 567 8901" />
-                    <Field name="emergency_contact_relationship" label="Relationship" required={false} placeholder="Spouse" />
+                    <FormField
+                      name="emergency_contact_phone"
+                      label="Contact Phone"
+                      placeholder="+1 234 567 8901"
+                      value={form.emergency_contact_phone}
+                      error={errors.emergency_contact_phone}
+                      onChange={(val) => update("emergency_contact_phone", val)}
+                    />
+                    <FormField
+                      name="emergency_contact_relationship"
+                      label="Relationship"
+                      required={false}
+                      placeholder="Spouse"
+                      value={form.emergency_contact_relationship}
+                      error={errors.emergency_contact_relationship}
+                      onChange={(val) => update("emergency_contact_relationship", val)}
+                    />
                   </div>
                 </div>
 

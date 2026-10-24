@@ -120,7 +120,7 @@ export default function DoctorDashboard() {
 
   const stats = {
     total: consultations.length,
-    waiting: consultations.filter((c) => c.status === "paid").length,
+    waiting: consultations.filter((c) => ["pending", "paid"].includes(c.status)).length,
     inProgress: consultations.filter((c) => c.status === "in_progress").length,
   };
 
@@ -181,23 +181,25 @@ export default function DoctorDashboard() {
                 <CardContent className="flex items-center justify-between p-4">
                   <div className="flex items-center gap-4">
                     <div className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold ${
-                      c.consultation_types.name === "priority"
+                      c.consultation_types?.name === "priority"
                         ? "bg-destructive/10 text-destructive"
-                        : c.consultation_types.name === "standard"
+                        : c.consultation_types?.name === "standard"
                         ? "bg-primary/10 text-primary"
                         : "bg-muted text-muted-foreground"
                     }`}>
                       {c.priority_score}
                     </div>
                     <div>
-                      <p className="font-medium">{c.patients.full_name}</p>
+                      <p className="font-medium">{c.patients?.full_name || "Patient"}</p>
                       <p className="text-sm text-muted-foreground">
-                        {c.consultation_types.display_name} · {c.patients.nationality}
+                        {c.consultation_types?.display_name || "Consultation"} · {c.patients?.nationality || "Visitor"}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Badge className={statusColors[c.status]}>{c.status.replace("_", " ")}</Badge>
+                    <Badge className={statusColors[c.status] || "bg-gray-100 text-gray-800"}>
+                      {(c.status || "pending").replace("_", " ")}
+                    </Badge>
                     <Button variant="outline" size="sm" onClick={() => openDetail(c)}>
                       <Eye className="mr-1 h-4 w-4" /> View
                     </Button>
@@ -215,7 +217,7 @@ export default function DoctorDashboard() {
             <>
               <DialogHeader>
                 <DialogTitle className="font-display text-xl">
-                  {selected.patients.full_name}
+                  {selected.patients?.full_name || "Patient Consultation"}
                 </DialogTitle>
               </DialogHeader>
 
@@ -224,12 +226,12 @@ export default function DoctorDashboard() {
                 <div>
                   <h3 className="mb-2 font-semibold">Patient Info</h3>
                   <div className="grid gap-2 text-sm md:grid-cols-2">
-                    <div><span className="text-muted-foreground">Email:</span> {selected.patients.email}</div>
-                    <div><span className="text-muted-foreground">Phone:</span> {maskPhone(selected.patients.phone)}</div>
-                    <div><span className="text-muted-foreground">DOB:</span> {selected.patients.date_of_birth}</div>
-                    <div><span className="text-muted-foreground">Nationality:</span> {selected.patients.nationality}</div>
-                    <div><span className="text-muted-foreground">Passport:</span> {maskPassport(selected.patients.passport_number)}</div>
-                    <div><span className="text-muted-foreground">Tracking:</span> <span className="font-mono">{selected.patients.tracking_code}</span></div>
+                    <div><span className="text-muted-foreground">Email:</span> {selected.patients?.email || "N/A"}</div>
+                    <div><span className="text-muted-foreground">Phone:</span> {selected.patients?.phone ? maskPhone(selected.patients.phone) : "N/A"}</div>
+                    <div><span className="text-muted-foreground">DOB:</span> {selected.patients?.date_of_birth || "N/A"}</div>
+                    <div><span className="text-muted-foreground">Nationality:</span> {selected.patients?.nationality || "N/A"}</div>
+                    <div><span className="text-muted-foreground">Passport:</span> {selected.patients?.passport_number ? maskPassport(selected.patients.passport_number) : "N/A"}</div>
+                    <div><span className="text-muted-foreground">Tracking:</span> <span className="font-mono">{selected.patients?.tracking_code || "N/A"}</span></div>
                   </div>
                 </div>
 

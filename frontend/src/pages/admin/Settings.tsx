@@ -39,7 +39,7 @@ export default function AdminSettings() {
   };
 
   const save = async (type: ConsultationType) => {
-    const { error } = await api.consultations.updateType(type.id, {
+    const { data, error } = await api.consultations.updateType(type.id, {
       display_name: type.display_name,
       description: type.description,
       price_cents: type.price_cents,
@@ -49,14 +49,20 @@ export default function AdminSettings() {
     if (error) {
       toast({ title: "Error", description: "Failed to save.", variant: "destructive" });
     } else {
-      toast({ title: "Saved", description: `${type.display_name} updated.` });
+      if (data) {
+        setTypes((prev) => prev.map((t) => (t.id === type.id ? { ...t, ...data } : t)));
+      }
+      toast({
+        title: "Pricing Saved Live",
+        description: `${type.display_name} is now $${(type.price_cents / 100).toFixed(0)} (${type.duration_minutes} min) live on the patient portal.`,
+      });
     }
   };
 
   return (
     <DashboardLayout>
       <h1 className="font-display text-2xl font-bold">Pricing & Settings</h1>
-      <p className="mt-2 text-muted-foreground">Manage consultation types, pricing, and durations.</p>
+      <p className="mt-2 text-muted-foreground">Manage consultation types, pricing, and durations. Changes reflect immediately on the patient consultation page.</p>
 
       {loading ? (
         <div className="mt-8 flex justify-center">
@@ -90,16 +96,25 @@ export default function AdminSettings() {
                     <Label>Price ($)</Label>
                     <Input
                       type="number"
-                      value={type.price_cents / 100}
-                      onChange={(e) => updateType(type.id, "price_cents", Math.round(parseFloat(e.target.value) * 100))}
+                      min="0"
+                      step="1"
+                      value={isNaN(type.price_cents) ? "" : type.price_cents / 100}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        updateType(type.id, "price_cents", isNaN(val) ? 0 : Math.round(val * 100));
+                      }}
                     />
                   </div>
                   <div>
                     <Label>Duration (min)</Label>
                     <Input
                       type="number"
-                      value={type.duration_minutes}
-                      onChange={(e) => updateType(type.id, "duration_minutes", parseInt(e.target.value))}
+                      min="1"
+                      value={type.duration_minutes || 0}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        updateType(type.id, "duration_minutes", isNaN(val) ? 0 : val);
+                      }}
                     />
                   </div>
                 </div>

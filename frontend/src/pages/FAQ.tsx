@@ -9,7 +9,7 @@ import {
 const faqs = [
   { q: "Who is the doctor?", a: "Our doctor is an embassy-recommended medical professional based in Sri Lanka, specializing in treating foreign visitors and travelers." },
   { q: "Do I need to create an account?", a: "No, account creation is optional. You can complete the entire consultation process using just the tracking code you receive after submitting your information." },
-  { q: "What types of consultation are available?", a: "We offer three types: Priority ($150, 30 min, highest queue priority), Standard ($100, 20 min), and Short ($50, 10 min) for quick queries or follow-ups." },
+  { q: "What types of consultation are available?", a: "We offer three types: Priority (highest queue priority for urgent conditions), Standard (comprehensive assessment), and Short (quick queries or prescription follow-ups). Up-to-date pricing is displayed directly when booking." },
   { q: "How do I pay?", a: "Payment is made securely online via Stripe. We accept all major credit and debit cards. Your card details are never stored on our system." },
   { q: "How will I receive the consultation?", a: "After payment, the doctor will review your case and share a WhatsApp or Google Meet link. You'll see this link on your status tracking page." },
   { q: "Is my medical data secure?", a: "Yes. All data is transmitted over HTTPS, sensitive fields are encrypted, and access is strictly controlled. Only the doctor and authorized staff can view your medical records." },

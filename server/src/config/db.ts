@@ -33,6 +33,13 @@ export async function testConnection(): Promise<boolean> {
   try {
     const client = await pool.connect();
     const res = await client.query('SELECT NOW()');
+    
+    // Auto-migration for payment security fields
+    await client.query(`
+      ALTER TABLE payments ADD COLUMN IF NOT EXISTS card_brand TEXT;
+      ALTER TABLE payments ADD COLUMN IF NOT EXISTS card_last4 TEXT;
+    `).catch(() => {});
+
     client.release();
     isConnected = true;
     console.log(`[PostgreSQL] Connected successfully to database at ${res.rows[0].now}`);

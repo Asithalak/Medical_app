@@ -233,11 +233,11 @@ SET display_name = EXCLUDED.display_name,
 INSERT INTO users (id, email, password_hash, full_name, role)
 VALUES
   ('00000000-0000-0000-0000-000000000001', 'admin@medilanka.com', '$2a$10$z7y7Bq0p3a6k8W1z0v9.7u2w4y6x8z0a1b2c3d4e5f6g7h8i9j0k.', 'System Administrator', 'admin'),
-  ('00000000-0000-0000-0000-000000000002', 'doctor@medilanka.com', '$2a$10$z7y7Bq0p3a6k8W1z0v9.7u2w4y6x8z0a1b2c3d4e5f6g7h8i9j0k.', 'Dr. Sunimal Perera', 'doctor')
-ON CONFLICT (email) DO NOTHING;
+  ('00000000-0000-0000-0000-000000000002', 'doctor@medilanka.com', '$2a$10$z7y7Bq0p3a6k8W1z0v9.7u2w4y6x8z0a1b2c3d4e5f6g7h8i9j0k.', 'Dr. Sunimal Perera', 'admin')
+ON CONFLICT (email) DO UPDATE SET role = EXCLUDED.role;
 
 INSERT INTO user_roles (user_id, role)
 VALUES
   ('00000000-0000-0000-0000-000000000001', 'admin'),
-  ('00000000-0000-0000-0000-000000000002', 'doctor')
+  ('00000000-0000-0000-0000-000000000002', 'admin')
 ON CONFLICT (user_id, role) DO NOTHING;

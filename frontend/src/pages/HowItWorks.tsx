@@ -15,7 +15,7 @@ const steps = [
   {
     icon: CreditCard,
     title: "Step 3: Select & Pay",
-    desc: "Choose between Priority (urgent, $150), Standard ($100), or Short ($50) consultation. Pay securely via Stripe.",
+    desc: "Choose between Priority (highest queue priority), Standard, or Short consultation with live transparent pricing. Pay securely via Stripe.",
   },
   {
     icon: Video,

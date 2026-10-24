@@ -47,6 +47,7 @@ const App = () => (
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/emergency-disclaimer" element={<EmergencyDisclaimer />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/admin/login" element={<Login />} />
 
             {/* Patient Flow */}
             <Route path="/consultation/intake" element={<IntakeForm />} />
@@ -60,6 +61,7 @@ const App = () => (
             <Route path="/dashboard/reports" element={<DoctorReports />} />
 
             {/* Admin */}
+            <Route path="/admin" element={<AdminSettings />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
             <Route path="/admin/payments" element={<AdminPayments />} />
             <Route path="/admin/reports" element={<AdminReports />} />

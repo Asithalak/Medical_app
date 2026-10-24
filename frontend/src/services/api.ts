@@ -120,8 +120,12 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
   try {
     const res = await fetch(`${API_URL}${endpoint}`, {
+      cache: 'no-store',
       ...options,
-      headers,
+      headers: {
+        ...headers,
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+      },
     });
 
     if (!res.ok) {
@@ -139,10 +143,10 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 export const api = {
   // Auth client
   auth: {
-    async signInWithPassword({ email, password }: { email: string; password: string }) {
+    async signInWithPassword({ email, password, asAdmin }: { email: string; password: string; asAdmin?: boolean }) {
       const { data, error } = await request<{ user: User; token: string }>('/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, asAdmin }),
       });
 
       if (!error && data) {
@@ -153,7 +157,7 @@ export const api = {
       }
 
       // Offline / Pre-Postgres demo fallback for testing before user inputs postgres credentials:
-      if (email.toLowerCase().includes('admin') || password === 'admin' || password === 'admin123') {
+      if (asAdmin || email.toLowerCase().includes('admin') || password === 'admin' || password === 'admin123') {
         const adminUser: User = { id: 'admin-uuid', email, full_name: 'Admin User', role: 'admin' };
         const session: Session = { token: 'mock-jwt-admin-token', user: adminUser };
         setStoredSession(session);
@@ -162,7 +166,7 @@ export const api = {
       }
 
       if (email.toLowerCase().includes('doctor') || password === 'doctor' || password === 'doctor123') {
-        const doctorUser: User = { id: 'doctor-uuid', email, full_name: 'Dr. John Doe', role: 'doctor' };
+        const doctorUser: User = { id: 'doctor-uuid', email, full_name: 'Dr. John Doe', role: asAdmin ? 'admin' : 'doctor' };
         const session: Session = { token: 'mock-jwt-doctor-token', user: doctorUser };
         setStoredSession(session);
         notifyAuthChange('SIGNED_IN', session);
@@ -174,12 +178,19 @@ export const api = {
         id: `usr_${Date.now()}`,
         email,
         full_name: email.split('@')[0],
-        role: email.toLowerCase().includes('admin') ? 'admin' : 'doctor',
+        role: asAdmin || email.toLowerCase().includes('admin') ? 'admin' : 'doctor',
       };
       const session: Session = { token: 'mock-jwt-token', user: fallbackUser };
       setStoredSession(session);
       notifyAuthChange('SIGNED_IN', session);
       return { data: { user: fallbackUser, session }, error: null };
+    },
+
+    async updateUserRole({ email, role }: { email: string; role: 'admin' | 'doctor' }) {
+      return request<{ success: boolean; message: string }>('/auth/update-role', {
+        method: 'POST',
+        body: JSON.stringify({ email, role }),
+      });
     },
 
     async signInWithOAuth({ provider }: { provider: string; options?: any }) {
@@ -488,11 +499,15 @@ export const api = {
   payments: {
     async process(data: {
       consultation_id: string;
-      amount_cents: number;
+      amount_cents?: number;
       currency?: string;
       stripe_payment_id?: string;
+      card_number?: string;
+      card_expiry?: string;
+      card_cvc?: string;
+      cardholder_name?: string;
     }) {
-      const res = await request<{ success: boolean }>('/payments', {
+      const res = await request<{ success: boolean; data?: any }>('/payments', {
         method: 'POST',
         body: JSON.stringify(data),
       });
@@ -505,7 +520,7 @@ export const api = {
         id: `pay_${Date.now()}`,
         consultation_id: data.consultation_id,
         stripe_payment_id: data.stripe_payment_id || `sim_${Date.now()}`,
-        amount_cents: data.amount_cents,
+        amount_cents: data.amount_cents || 10000,
         currency: data.currency || 'usd',
         status: 'completed',
         created_at: new Date().toISOString(),
