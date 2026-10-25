@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import { query, isDbConnected } from '../config/db.js';
+import { sendConsultationSummaryEmail, sendConsultationLinkEmail } from '../services/emailService.js';
 
 export async function getConsultationTypes(req: Request, res: Response): Promise<void> {
   try {
@@ -148,6 +149,7 @@ export async function getConsultations(req: Request, res: Response): Promise<voi
 export async function updateConsultation(req: Request, res: Response): Promise<void> {
   const { id } = req.params;
   const updates = req.body;
+  const shouldSendEmail = updates.sendEmail ?? updates.send_email;
 
   try {
     if (isDbConnected()) {
@@ -172,13 +174,124 @@ export async function updateConsultation(req: Request, res: Response): Promise<v
       values.push(id);
       const sql = `UPDATE consultations SET ${setClauses.join(', ')} WHERE id = $${idx} RETURNING *`;
       const result = await query(sql, values);
-      res.json({ data: result.rows[0] });
+      const updatedConsultation = result.rows[0];
+
+      // Check if we should trigger an email to patient
+      let emailResult = null;
+      const isDiagnosisUpdate =
+        updates.diagnosis !== undefined ||
+        updates.prescription !== undefined ||
+        updates.recommendations !== undefined ||
+        updates.follow_up_notes !== undefined;
+      const isLinkOnlyUpdate = updates.consultation_link !== undefined && !isDiagnosisUpdate;
+
+      // If doctor updated diagnosis fields or explicitly requested sendEmail
+      if (isDiagnosisUpdate || shouldSendEmail) {
+        const patientRes = await query(
+          `SELECT c.*, p.full_name as patient_name, p.email as patient_email, p.tracking_code,
+                  ct.display_name as consultation_type
+           FROM consultations c
+           JOIN patients p ON p.id = c.patient_id
+           JOIN consultation_types ct ON ct.id = c.consultation_type_id
+           WHERE c.id = $1`,
+          [id]
+        );
+
+        if (patientRes.rows.length > 0) {
+          const row = patientRes.rows[0];
+          if (row.patient_email) {
+            emailResult = await sendConsultationSummaryEmail({
+              patientEmail: row.patient_email,
+              patientName: row.patient_name,
+              trackingCode: row.tracking_code,
+              consultationType: row.consultation_type,
+              diagnosis: updatedConsultation.diagnosis,
+              prescription: updatedConsultation.prescription,
+              recommendations: updatedConsultation.recommendations,
+              followUpNotes: updatedConsultation.follow_up_notes,
+              consultationLink: updatedConsultation.consultation_link,
+            });
+          }
+        }
+      } else if (isLinkOnlyUpdate && updates.consultation_link) {
+        // Only link was updated - notify patient of meeting link
+        const patientRes = await query(
+          `SELECT c.*, p.full_name as patient_name, p.email as patient_email, p.tracking_code,
+                  ct.display_name as consultation_type
+           FROM consultations c
+           JOIN patients p ON p.id = c.patient_id
+           JOIN consultation_types ct ON ct.id = c.consultation_type_id
+           WHERE c.id = $1`,
+          [id]
+        );
+
+        if (patientRes.rows.length > 0 && patientRes.rows[0].patient_email) {
+          const row = patientRes.rows[0];
+          emailResult = await sendConsultationLinkEmail({
+            patientEmail: row.patient_email,
+            patientName: row.patient_name,
+            trackingCode: row.tracking_code,
+            consultationType: row.consultation_type,
+            consultationLink: updates.consultation_link,
+          });
+        }
+      }
+
+      res.json({ data: updatedConsultation, emailResult });
       return;
     }
 
     res.json({ data: { id, ...updates } });
   } catch (err: any) {
     res.status(500).json({ message: 'Error updating consultation', error: err.message });
+  }
+}
+
+export async function sendConsultationEmail(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+
+  try {
+    if (!isDbConnected()) {
+      res.status(503).json({ message: 'Database not connected' });
+      return;
+    }
+
+    const patientRes = await query(
+      `SELECT c.*, p.full_name as patient_name, p.email as patient_email, p.tracking_code,
+              ct.display_name as consultation_type
+       FROM consultations c
+       JOIN patients p ON p.id = c.patient_id
+       JOIN consultation_types ct ON ct.id = c.consultation_type_id
+       WHERE c.id = $1`,
+      [id]
+    );
+
+    if (patientRes.rows.length === 0) {
+      res.status(404).json({ message: 'Consultation not found' });
+      return;
+    }
+
+    const row = patientRes.rows[0];
+    if (!row.patient_email) {
+      res.status(400).json({ message: 'Patient has no email address recorded' });
+      return;
+    }
+
+    const emailResult = await sendConsultationSummaryEmail({
+      patientEmail: row.patient_email,
+      patientName: row.patient_name,
+      trackingCode: row.tracking_code,
+      consultationType: row.consultation_type,
+      diagnosis: row.diagnosis,
+      prescription: row.prescription,
+      recommendations: row.recommendations,
+      followUpNotes: row.follow_up_notes,
+      consultationLink: row.consultation_link,
+    });
+
+    res.json({ success: emailResult.success, emailResult });
+  } catch (err: any) {
+    res.status(500).json({ message: 'Error sending consultation email', error: err.message });
   }
 }
 

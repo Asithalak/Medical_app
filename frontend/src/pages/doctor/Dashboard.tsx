@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { api } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { maskPassport, maskPhone } from "@/lib/validators";
-import { Eye, Send, RefreshCw, Users, Clock, CheckCircle2 } from "lucide-react";
+import { Eye, Send, RefreshCw, Users, Clock, CheckCircle2, Mail, Loader2 } from "lucide-react";
 
 interface ConsultationRow {
   id: string;
@@ -71,6 +71,10 @@ export default function DoctorDashboard() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  const [savingDiagnosis, setSavingDiagnosis] = useState(false);
+  const [savingLink, setSavingLink] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
+
   const fetchConsultations = useCallback(async () => {
     const { data } = await api.consultations.getQueue();
     if (data) setConsultations(data as unknown as ConsultationRow[]);
@@ -107,15 +111,101 @@ export default function DoctorDashboard() {
   };
 
   const saveLink = async (id: string) => {
-    await api.consultations.update(id, { consultation_link: consultLink });
-    toast({ title: "Consultation Link Saved" });
-    fetchConsultations();
+    setSavingLink(true);
+    try {
+      const res = await api.consultations.update(id, { consultation_link: consultLink });
+      if (res.emailResult?.success) {
+        toast({
+          title: "Link Saved & Emailed",
+          description: `Meeting link delivered to ${selected?.patients?.email || "patient"}.`,
+        });
+      } else {
+        toast({ title: "Consultation Link Saved" });
+      }
+      fetchConsultations();
+    } catch (err: any) {
+      toast({ title: "Error Saving Link", description: err.message, variant: "destructive" });
+    } finally {
+      setSavingLink(false);
+    }
   };
 
-  const saveDiagnosis = async (id: string) => {
-    await api.consultations.update(id, diagnosisForm);
-    toast({ title: "Diagnosis Saved" });
-    fetchConsultations();
+  const saveDiagnosis = async (id: string, sendEmail = true) => {
+    setSavingDiagnosis(true);
+    try {
+      const res = await api.consultations.update(id, {
+        ...diagnosisForm,
+        sendEmail,
+      });
+
+      if (res.emailResult?.success) {
+        toast({
+          title: "Diagnosis Saved & Emailed",
+          description: `Consultation summary sent to ${selected?.patients?.email || "patient"}.`,
+        });
+      } else if (res.emailResult?.skipped) {
+        toast({
+          title: "Diagnosis Saved",
+          description: "Saved! Note: RESEND_API_KEY is not configured in server/.env yet.",
+        });
+      } else if (res.emailResult?.error) {
+        toast({
+          title: "Diagnosis Saved",
+          description: `Saved! Email delivery note: ${res.emailResult.error}`,
+          variant: "destructive",
+        });
+      } else {
+        toast({ title: "Diagnosis Saved Successfully" });
+      }
+
+      fetchConsultations();
+    } catch (err: any) {
+      toast({
+        title: "Error Saving Diagnosis",
+        description: err.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSavingDiagnosis(false);
+    }
+  };
+
+  const handleSendEmail = async (id: string) => {
+    if (!selected?.patients?.email) {
+      toast({
+        title: "No Email Found",
+        description: "This patient does not have an email address recorded.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSendingEmail(true);
+    try {
+      const res = await api.consultations.sendEmail(id);
+      if (res.emailResult?.success || res.data?.success) {
+        toast({
+          title: "Email Sent Successfully",
+          description: `Consultation summary delivered to ${selected.patients.email}`,
+        });
+      } else if (res.emailResult?.skipped) {
+        toast({
+          title: "API Key Missing",
+          description: "Please configure RESEND_API_KEY in server/.env to send real emails.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Email Failed",
+          description: res.emailResult?.error || res.error?.message || "Could not send email.",
+          variant: "destructive",
+        });
+      }
+    } catch (err: any) {
+      toast({ title: "Error Sending Email", description: err.message, variant: "destructive" });
+    } finally {
+      setSendingEmail(false);
+    }
   };
 
   const stats = {
@@ -253,40 +343,88 @@ export default function DoctorDashboard() {
 
                 {/* Consultation Link */}
                 <div>
-                  <h3 className="mb-2 font-semibold">Consultation Link</h3>
+                  <div className="mb-2 flex items-center justify-between">
+                    <h3 className="font-semibold">Consultation Link</h3>
+                    {selected.patients?.email && (
+                      <span className="text-xs text-muted-foreground">
+                        Emails to: {selected.patients.email}
+                      </span>
+                    )}
+                  </div>
                   <div className="flex gap-2">
                     <Input
                       value={consultLink}
                       onChange={(e) => setConsultLink(e.target.value)}
                       placeholder="WhatsApp or Google Meet link..."
                     />
-                    <Button size="sm" onClick={() => saveLink(selected.id)}>
-                      <Send className="mr-1 h-4 w-4" /> Save
+                    <Button size="sm" onClick={() => saveLink(selected.id)} disabled={savingLink}>
+                      {savingLink ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Send className="mr-1 h-4 w-4" />}
+                      Save & Email Link
                     </Button>
                   </div>
                 </div>
 
                 {/* Diagnosis Form */}
                 <div>
-                  <h3 className="mb-2 font-semibold">Diagnosis & Notes</h3>
+                  <div className="mb-2 flex items-center justify-between">
+                    <h3 className="font-semibold">Diagnosis & Notes</h3>
+                    {selected.patients?.email && (
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Mail className="h-3.5 w-3.5 text-primary" /> Recipient: <strong>{selected.patients.email}</strong>
+                      </span>
+                    )}
+                  </div>
                   <div className="space-y-3">
                     <div>
                       <Label>Diagnosis</Label>
-                      <Textarea value={diagnosisForm.diagnosis} onChange={(e) => setDiagnosisForm((f) => ({ ...f, diagnosis: e.target.value }))} rows={3} />
+                      <Textarea
+                        value={diagnosisForm.diagnosis}
+                        onChange={(e) => setDiagnosisForm((f) => ({ ...f, diagnosis: e.target.value }))}
+                        rows={3}
+                        placeholder="Enter clinical assessment or findings..."
+                      />
                     </div>
                     <div>
                       <Label>Prescription</Label>
-                      <Textarea value={diagnosisForm.prescription} onChange={(e) => setDiagnosisForm((f) => ({ ...f, prescription: e.target.value }))} rows={2} />
+                      <Textarea
+                        value={diagnosisForm.prescription}
+                        onChange={(e) => setDiagnosisForm((f) => ({ ...f, prescription: e.target.value }))}
+                        rows={2}
+                        placeholder="Medications, dosage, and instructions (Rx)..."
+                      />
                     </div>
                     <div>
                       <Label>Recommendations</Label>
-                      <Textarea value={diagnosisForm.recommendations} onChange={(e) => setDiagnosisForm((f) => ({ ...f, recommendations: e.target.value }))} rows={2} />
+                      <Textarea
+                        value={diagnosisForm.recommendations}
+                        onChange={(e) => setDiagnosisForm((f) => ({ ...f, recommendations: e.target.value }))}
+                        rows={2}
+                        placeholder="Medical advice, precautions, or dietary recommendations..."
+                      />
                     </div>
                     <div>
                       <Label>Follow-up Notes</Label>
-                      <Textarea value={diagnosisForm.follow_up_notes} onChange={(e) => setDiagnosisForm((f) => ({ ...f, follow_up_notes: e.target.value }))} rows={2} />
+                      <Textarea
+                        value={diagnosisForm.follow_up_notes}
+                        onChange={(e) => setDiagnosisForm((f) => ({ ...f, follow_up_notes: e.target.value }))}
+                        rows={2}
+                        placeholder="Follow-up timeframe or monitoring instructions..."
+                      />
                     </div>
-                    <Button onClick={() => saveDiagnosis(selected.id)}>Save Diagnosis</Button>
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      <Button onClick={() => saveDiagnosis(selected.id, true)} disabled={savingDiagnosis}>
+                        {savingDiagnosis ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
+                        Save Diagnosis & Email Patient
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => handleSendEmail(selected.id)}
+                        disabled={sendingEmail || savingDiagnosis}
+                      >
+                        {sendingEmail ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                        Email Patient Summary
+                      </Button>
+                    </div>
                   </div>
                 </div>
 

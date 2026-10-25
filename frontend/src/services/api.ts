@@ -107,7 +107,7 @@ function setStoredSession(session: Session | null) {
 }
 
 // Base fetcher with JWT auth headers
-async function request<T>(endpoint: string, options: RequestInit = {}): Promise<{ data: T | null; error: Error | null }> {
+async function request<T>(endpoint: string, options: RequestInit = {}): Promise<{ data: T | null; error: Error | null; emailResult?: any }> {
   const session = getStoredSession();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -134,7 +134,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     }
 
     const json = await res.json();
-    return { data: json.data !== undefined ? json.data : json, error: null };
+    return { data: json.data !== undefined ? json.data : json, error: null, emailResult: json.emailResult };
   } catch (err: any) {
     return { data: null, error: err };
   }
@@ -472,7 +472,7 @@ export const api = {
       return { data: sampleConsultations, error: null };
     },
 
-    async update(id: string, updates: Partial<Consultation>) {
+    async update(id: string, updates: Partial<Consultation> & { sendEmail?: boolean }) {
       const res = await request<Consultation>(`/consultations/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(updates),
@@ -483,7 +483,13 @@ export const api = {
       const stored: Consultation[] = JSON.parse(localStorage.getItem(MOCK_CONSULTATIONS_KEY) || '[]');
       const updated = stored.map((c) => (c.id === id ? { ...c, ...updates, updated_at: new Date().toISOString() } : c));
       localStorage.setItem(MOCK_CONSULTATIONS_KEY, JSON.stringify(updated));
-      return { data: updated.find((c) => c.id === id) || null, error: null };
+      return { data: updated.find((c) => c.id === id) || null, error: null, emailResult: null };
+    },
+
+    async sendEmail(id: string) {
+      return request<{ success: boolean; emailResult: any }>(`/consultations/${id}/send-email`, {
+        method: 'POST',
+      });
     },
 
     async getAll(): Promise<{ data: Consultation[] | null; error: Error | null }> {

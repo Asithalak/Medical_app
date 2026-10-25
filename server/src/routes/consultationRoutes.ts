@@ -5,6 +5,7 @@ import {
   createConsultation,
   getConsultations,
   updateConsultation,
+  sendConsultationEmail,
   getByTrackingCode,
 } from '../controllers/consultationController.js';
 
@@ -18,6 +19,7 @@ router.put('/types/:id', updateConsultationType);
 router.get('/', getConsultations);
 router.post('/', createConsultation);
 router.patch('/:id', updateConsultation);
+router.post('/:id/send-email', sendConsultationEmail);
 router.get('/tracking/:code', getByTrackingCode);
 
 export default router;
