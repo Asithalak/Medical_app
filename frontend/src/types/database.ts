@@ -125,7 +125,42 @@ export interface TrackingData {
   status: ConsultationStatus;
   consultation_link: string | null;
   consultation_type: string;
-  patient_name: string;
+  duration_minutes?: number;
+  price_cents?: number;
+  priority_score?: number;
   created_at: string;
   scheduled_at: string | null;
+
+  // Patient Info
+  patient_id?: string;
+  patient_name: string;
+  patient_email?: string;
+  patient_phone?: string;
+  date_of_birth?: string;
+  nationality?: string;
+  passport_number?: string;
+  passport_expiry?: string | null;
+  hotel_address?: string | null;
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
+  emergency_contact_relationship?: string | null;
+  tracking_code?: string;
+
+  // Medical Precheck Info
+  chief_complaint?: string;
+  symptoms?: string[];
+  symptom_duration?: string | null;
+  allergies?: string | null;
+  current_medications?: string | null;
+  medical_history?: string | null;
+  has_chronic_conditions?: boolean;
+  chronic_conditions_detail?: string | null;
+  file_urls?: string[];
+
+  // Doctor diagnosis & prescription (when available)
+  diagnosis?: string | null;
+  prescription?: string | null;
+  recommendations?: string | null;
+  follow_up_notes?: string | null;
 }
+
