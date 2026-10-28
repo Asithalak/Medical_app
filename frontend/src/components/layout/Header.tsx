@@ -16,7 +16,7 @@ export default function Header() {
   const location = useLocation();
 
   return (
-    <header className="fixed top-5 left-1/2 z-50 -translate-x-1/2 w-[calc(100%-2rem)] max-w-5xl">
+    <header className="fixed top-5 left-1/2 z-50 -translate-x-1/2 w-[calc(100%-2rem)] max-w-5xl print:hidden">
       <div className="flex h-14 items-center justify-between rounded-full bg-white/80 px-4 shadow-lg shadow-primary/5 backdrop-blur-xl border border-white/40 md:px-6">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5 shrink-0">

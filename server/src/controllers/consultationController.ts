@@ -302,18 +302,47 @@ export async function getByTrackingCode(req: Request, res: Response): Promise<vo
     if (isDbConnected()) {
       const sql = `
         SELECT 
-          c.id as consultation_id,
-          c.status,
+          COALESCE(c.id, p.id) as consultation_id,
+          COALESCE(c.status, 'paid') as status,
           c.consultation_link,
-          ct.display_name as consultation_type,
+          c.priority_score,
+          c.diagnosis,
+          c.prescription,
+          c.recommendations,
+          c.follow_up_notes,
+          c.scheduled_at,
+          COALESCE(c.created_at, p.created_at) as created_at,
+          COALESCE(ct.display_name, 'Standard Consultation') as consultation_type,
+          ct.duration_minutes,
+          ct.price_cents,
+          p.id as patient_id,
           p.full_name as patient_name,
-          c.created_at,
-          c.scheduled_at
-        FROM consultations c
-        JOIN patients p ON p.id = c.patient_id
-        JOIN consultation_types ct ON ct.id = c.consultation_type_id
+          p.email as patient_email,
+          p.phone as patient_phone,
+          p.date_of_birth,
+          p.nationality,
+          p.passport_number,
+          p.passport_expiry,
+          p.hotel_address,
+          p.emergency_contact_name,
+          p.emergency_contact_phone,
+          p.emergency_contact_relationship,
+          p.tracking_code,
+          mp.chief_complaint,
+          mp.symptoms,
+          mp.symptom_duration,
+          mp.allergies,
+          mp.current_medications,
+          mp.medical_history,
+          mp.has_chronic_conditions,
+          mp.chronic_conditions_detail,
+          mp.file_urls
+        FROM patients p
+        LEFT JOIN consultations c ON c.patient_id = p.id
+        LEFT JOIN consultation_types ct ON ct.id = c.consultation_type_id
+        LEFT JOIN medical_prechecks mp ON (mp.id = c.medical_precheck_id OR mp.patient_id = p.id)
         WHERE UPPER(p.tracking_code) = UPPER($1)
-        ORDER BY c.created_at DESC
+        ORDER BY c.created_at DESC NULLS LAST, mp.created_at DESC NULLS LAST
         LIMIT 1
       `;
 
