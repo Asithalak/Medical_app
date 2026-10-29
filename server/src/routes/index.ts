@@ -6,7 +6,12 @@ import consultationRoutes from './consultationRoutes.js';
 import paymentRoutes from './paymentRoutes.js';
 import reportRoutes from './reportRoutes.js';
 import auditRoutes from './auditRoutes.js';
-import { getConsultationTypes, updateConsultationType } from '../controllers/consultationController.js';
+import {
+  getConsultationTypes,
+  updateConsultationType,
+  createConsultationType,
+  deleteConsultationType,
+} from '../controllers/consultationController.js';
 import { uploadFile } from '../controllers/precheckController.js';
 import { documentUpload } from '../middleware/uploadMiddleware.js';
 
@@ -19,7 +24,9 @@ router.get('/health', (_req, res) => {
 
 // Direct aliases matching frontend expectations
 router.get('/consultation-types', getConsultationTypes);
+router.post('/consultation-types', createConsultationType);
 router.put('/consultation-types/:id', updateConsultationType);
+router.delete('/consultation-types/:id', deleteConsultationType);
 router.post('/upload', documentUpload.single('file'), uploadFile);
 
 // Modular Routes

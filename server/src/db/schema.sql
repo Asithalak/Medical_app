@@ -85,7 +85,7 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 -- 4. Consultation Types Table (Admin managed pricing & durations)
 CREATE TABLE IF NOT EXISTS consultation_types (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name consultation_type_name NOT NULL UNIQUE,
+  name TEXT NOT NULL UNIQUE,
   display_name TEXT NOT NULL,
   description TEXT,
   price_cents INTEGER NOT NULL,

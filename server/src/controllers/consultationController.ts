@@ -54,7 +54,7 @@ export async function getConsultationTypes(req: Request, res: Response): Promise
 
 export async function updateConsultationType(req: Request, res: Response): Promise<void> {
   const { id } = req.params;
-  const { display_name, description, price_cents, duration_minutes } = req.body;
+  const { display_name, description, price_cents, duration_minutes, priority_score, is_active } = req.body;
 
   try {
     if (isDbConnected()) {
@@ -64,18 +64,90 @@ export async function updateConsultationType(req: Request, res: Response): Promi
             description = COALESCE($2, description),
             price_cents = COALESCE($3, price_cents),
             duration_minutes = COALESCE($4, duration_minutes),
+            priority_score = COALESCE($5, priority_score),
+            is_active = COALESCE($6, is_active),
             updated_at = NOW()
-        WHERE id::text = $5 OR name = $5
+        WHERE id::text = $7 OR name = $7
         RETURNING *
       `;
-      const result = await query(sql, [display_name, description, price_cents, duration_minutes, id]);
+      const result = await query(sql, [display_name, description, price_cents, duration_minutes, priority_score, is_active, id]);
       res.json({ data: result.rows[0] });
       return;
     }
 
-    res.json({ data: { id, display_name, description, price_cents, duration_minutes } });
+    res.json({ data: { id, display_name, description, price_cents, duration_minutes, priority_score, is_active } });
   } catch (err: any) {
     res.status(500).json({ message: 'Error updating consultation type', error: err.message });
+  }
+}
+
+export async function createConsultationType(req: Request, res: Response): Promise<void> {
+  const { name, display_name, description, price_cents, duration_minutes, priority_score } = req.body;
+
+  if (!display_name || price_cents === undefined || duration_minutes === undefined) {
+    res.status(400).json({ message: 'display_name, price_cents, and duration_minutes are required' });
+    return;
+  }
+
+  const slug = (name || display_name)
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '_')
+    .slice(0, 30);
+  const uniqueName = `${slug}_${Date.now().toString(36)}`;
+  const score = priority_score !== undefined ? priority_score : 10;
+
+  try {
+    if (isDbConnected()) {
+      const sql = `
+        INSERT INTO consultation_types (
+          name, display_name, description, price_cents, duration_minutes, priority_score, is_active
+        ) VALUES ($1, $2, $3, $4, $5, $6, true)
+        RETURNING *
+      `;
+      const result = await query(sql, [
+        uniqueName,
+        display_name,
+        description || null,
+        price_cents,
+        duration_minutes,
+        score,
+      ]);
+      res.status(201).json({ data: result.rows[0] });
+      return;
+    }
+
+    const mockId = `type_${Date.now()}`;
+    res.status(201).json({
+      data: {
+        id: mockId,
+        name: uniqueName,
+        display_name,
+        description: description || null,
+        price_cents,
+        duration_minutes,
+        priority_score: score,
+        is_active: true,
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({ message: 'Error creating consultation type', error: err.message });
+  }
+}
+
+export async function deleteConsultationType(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+
+  try {
+    if (isDbConnected()) {
+      await query(`DELETE FROM consultation_types WHERE id::text = $1 OR name = $1`, [id]);
+      res.json({ data: { success: true, id } });
+      return;
+    }
+
+    res.json({ data: { success: true, id } });
+  } catch (err: any) {
+    res.status(500).json({ message: 'Error deleting consultation type', error: err.message });
   }
 }
 
