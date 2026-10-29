@@ -2,6 +2,8 @@ import { Router } from 'express';
 import {
   getConsultationTypes,
   updateConsultationType,
+  createConsultationType,
+  deleteConsultationType,
   createConsultation,
   getConsultations,
   updateConsultation,
@@ -13,7 +15,9 @@ const router = Router();
 
 // Consultation Types
 router.get('/types', getConsultationTypes);
+router.post('/types', createConsultationType);
 router.put('/types/:id', updateConsultationType);
+router.delete('/types/:id', deleteConsultationType);
 
 // Consultations
 router.get('/', getConsultations);

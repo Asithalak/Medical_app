@@ -352,6 +352,51 @@ export const api = {
       return { data: types.find((t) => t.id === id) || null, error: null };
     },
 
+    async createType(typeData: {
+      name?: string;
+      display_name: string;
+      description?: string | null;
+      price_cents: number;
+      duration_minutes: number;
+      priority_score?: number;
+    }): Promise<{ data: ConsultationType | null; error: Error | null }> {
+      const res = await request<ConsultationType>('/consultation-types', {
+        method: 'POST',
+        body: JSON.stringify(typeData),
+      });
+      if (!res.error && res.data) return res;
+
+      // Mock fallback
+      const types = getMockTypes();
+      const newType: ConsultationType = {
+        id: `type_${Date.now()}`,
+        name: typeData.name || typeData.display_name.toLowerCase().replace(/[^a-z0-9]+/g, '_'),
+        display_name: typeData.display_name,
+        description: typeData.description || null,
+        price_cents: typeData.price_cents,
+        duration_minutes: typeData.duration_minutes,
+        priority_score: typeData.priority_score || 20,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      types.push(newType);
+      localStorage.setItem(MOCK_TYPES_KEY, JSON.stringify(types));
+      return { data: newType, error: null };
+    },
+
+    async deleteType(id: string): Promise<{ success: boolean; error: Error | null }> {
+      const res = await request<{ success: boolean }>(`/consultation-types/${id}`, {
+        method: 'DELETE',
+      });
+      if (!res.error) return { success: true, error: null };
+
+      // Mock fallback
+      const types = getMockTypes().filter((t) => t.id !== id);
+      localStorage.setItem(MOCK_TYPES_KEY, JSON.stringify(types));
+      return { success: true, error: null };
+    },
+
     async create(data: {
       patient_id: string;
       consultation_type_id: string;

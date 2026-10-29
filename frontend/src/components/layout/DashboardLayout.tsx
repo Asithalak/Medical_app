@@ -15,13 +15,13 @@ import {
 
 const doctorLinks = [
   { href: "/dashboard", label: "Queue", icon: LayoutDashboard },
+  { href: "/admin/settings", label: "Pricing", icon: Settings },
   { href: "/dashboard/reports", label: "Reports", icon: BarChart3 },
 ];
 
-const adminLinks = [
-  { href: "/admin/settings", label: "Pricing", icon: Settings },
+const adminExtraLinks = [
   { href: "/admin/payments", label: "Payments", icon: CreditCard },
-  { href: "/admin/reports", label: "Reports", icon: FileText },
+  { href: "/admin/reports", label: "Financial Reports", icon: FileText },
   { href: "/admin/audit-logs", label: "Audit Logs", icon: ScrollText },
 ];
 
@@ -46,7 +46,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   if (!user) return null;
 
-  const links = role === "admin" ? [...doctorLinks, ...adminLinks] : doctorLinks;
+  const links = role === "admin" ? [...doctorLinks, ...adminExtraLinks] : doctorLinks;
 
   return (
     <div className="flex min-h-screen">

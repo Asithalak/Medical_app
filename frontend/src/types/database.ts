@@ -9,7 +9,7 @@ export type ConsultationStatus =
   | 'referred'
   | 'cancelled';
 
-export type ConsultationTypeName = 'priority' | 'standard' | 'short';
+export type ConsultationTypeName = 'priority' | 'standard' | 'short' | (string & {});
 
 export interface User {
   id: string;
@@ -32,8 +32,8 @@ export interface ConsultationType {
   duration_minutes: number;
   priority_score: number;
   is_active: boolean;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Patient {

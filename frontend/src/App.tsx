@@ -58,6 +58,7 @@ const App = () => (
 
             {/* Doctor */}
             <Route path="/dashboard" element={<DoctorDashboard />} />
+            <Route path="/dashboard/pricing" element={<AdminSettings />} />
             <Route path="/dashboard/reports" element={<DoctorReports />} />
 
             {/* Admin */}
