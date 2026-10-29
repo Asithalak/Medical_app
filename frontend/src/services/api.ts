@@ -293,8 +293,18 @@ export const api = {
       return { data: id, error: null };
     },
 
-    async uploadFile(path: string, file: File) {
-      // Try server upload endpoint if available
+    async uploadFile(path: string, file: File): Promise<{
+      data: string;
+      error: Error | null;
+      details?: {
+        url: string;
+        path: string;
+        public_id?: string;
+        provider?: string;
+        filename?: string;
+        bytes?: number;
+      };
+    }> {
       try {
         const formData = new FormData();
         formData.append('file', file);
@@ -307,12 +317,15 @@ export const api = {
 
         if (res.ok) {
           const json = await res.json();
-          return { data: json.path || path, error: null };
+          const fileUrl = json.url || json.path || path;
+          return { data: fileUrl, details: json, error: null };
+        } else {
+          const errJson = await res.json().catch(() => null);
+          return { data: '', error: new Error(errJson?.message || `Upload failed (${res.status})`) };
         }
-      } catch {
-        // Fallback: local blob/data URL
+      } catch (err: any) {
+        return { data: '', error: new Error(err.message || 'Upload connection error') };
       }
-      return { credentials: null, data: { path }, error: null };
     },
   },
 
@@ -360,6 +373,8 @@ export const api = {
       const patient = patients.find((p) => p.id === data.patient_id);
       const types = getMockTypes();
       const type = types.find((t) => t.id === data.consultation_type_id);
+      const mockPrechecks = JSON.parse(localStorage.getItem('medilanka_mock_prechecks') || '{}');
+      const precheck = data.medical_precheck_id ? mockPrechecks[data.medical_precheck_id] : null;
 
       const newConsult: Consultation = {
         id,
@@ -372,6 +387,22 @@ export const api = {
         updated_at: new Date().toISOString(),
         patients: patient,
         consultation_types: type ? { display_name: type.display_name, name: type.name } : undefined,
+        medical_prechecks: precheck
+          ? {
+              id: precheck.id,
+              patient_id: data.patient_id,
+              chief_complaint: precheck._chief_complaint || precheck.chief_complaint || '',
+              symptoms: precheck._symptoms || precheck.symptoms || [],
+              symptom_duration: precheck._symptom_duration || precheck.symptom_duration || null,
+              allergies: precheck._allergies || precheck.allergies || null,
+              current_medications: precheck._current_medications || precheck.current_medications || null,
+              medical_history: precheck._medical_history || precheck.medical_history || null,
+              has_chronic_conditions: Boolean(precheck._has_chronic_conditions || precheck.has_chronic_conditions),
+              chronic_conditions_detail: precheck._chronic_conditions_detail || precheck.chronic_conditions_detail || null,
+              file_urls: precheck._file_urls || precheck.file_urls || [],
+              created_at: new Date().toISOString(),
+            }
+          : undefined,
       };
 
       mockConsultations.push(newConsult);

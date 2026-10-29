@@ -8,19 +8,7 @@ import reportRoutes from './reportRoutes.js';
 import auditRoutes from './auditRoutes.js';
 import { getConsultationTypes, updateConsultationType } from '../controllers/consultationController.js';
 import { uploadFile } from '../controllers/precheckController.js';
-import multer from 'multer';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const uploadsDir = path.join(__dirname, '../../uploads');
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadsDir),
-  filename: (_req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`),
-});
-const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
+import { documentUpload } from '../middleware/uploadMiddleware.js';
 
 const router = Router();
 
@@ -32,7 +20,7 @@ router.get('/health', (_req, res) => {
 // Direct aliases matching frontend expectations
 router.get('/consultation-types', getConsultationTypes);
 router.put('/consultation-types/:id', updateConsultationType);
-router.post('/upload', upload.single('file'), uploadFile);
+router.post('/upload', documentUpload.single('file'), uploadFile);
 
 // Modular Routes
 router.use('/auth', authRoutes);

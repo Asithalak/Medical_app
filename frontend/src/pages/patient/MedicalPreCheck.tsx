@@ -5,14 +5,43 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { api } from "@/services/api";
 import { medicalPreCheckSchema, SYMPTOM_OPTIONS, validateFile } from "@/lib/validators";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, X } from "lucide-react";
+import {
+  X,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
+  FileText,
+  ExternalLink,
+  RefreshCw,
+  CloudUpload,
+} from "lucide-react";
+
+interface UploadItem {
+  id: string;
+  file: File;
+  name: string;
+  size: number;
+  type: string;
+  status: 'uploading' | 'completed' | 'error';
+  url?: string;
+  previewUrl?: string;
+  errorMsg?: string;
+}
+
+function formatBytes(bytes: number, decimals = 1) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
 
 export default function MedicalPreCheck() {
   const [symptoms, setSymptoms] = useState<string[]>([]);
@@ -23,7 +52,7 @@ export default function MedicalPreCheck() {
   const [medicalHistory, setMedicalHistory] = useState("");
   const [hasChronic, setHasChronic] = useState(false);
   const [chronicDetail, setChronicDetail] = useState("");
-  const [files, setFiles] = useState<File[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadItem[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -47,20 +76,122 @@ export default function MedicalPreCheck() {
     setSymptoms((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
   };
 
+  const uploadSingleFile = async (item: UploadItem) => {
+    const uploadPath = `${patientId}/${Date.now()}-${item.name}`;
+    const { data: uploadedUrl, error } = await api.prechecks.uploadFile(uploadPath, item.file);
+
+    setUploadedFiles((prev) =>
+      prev.map((f) => {
+        if (f.id !== item.id) return f;
+        if (error || !uploadedUrl) {
+          return {
+            ...f,
+            status: 'error',
+            errorMsg: error?.message || 'Upload failed. Please try again.',
+          };
+        }
+        return {
+          ...f,
+          status: 'completed',
+          url: uploadedUrl,
+          errorMsg: undefined,
+        };
+      })
+    );
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newFiles = Array.from(e.target.files || []);
-    for (const file of newFiles) {
+    const selectedFiles = Array.from(e.target.files || []);
+    if (selectedFiles.length === 0) return;
+
+    if (uploadedFiles.length + selectedFiles.length > 5) {
+      toast({
+        title: "File Limit Exceeded",
+        description: "You can upload a maximum of 5 files in total.",
+        variant: "destructive",
+      });
+      e.target.value = '';
+      return;
+    }
+
+    const newItems: UploadItem[] = [];
+    for (const file of selectedFiles) {
       const err = validateFile(file);
       if (err) {
-        toast({ title: "Invalid File", description: err, variant: "destructive" });
-        return;
+        toast({ title: `Invalid File: ${file.name}`, description: err, variant: "destructive" });
+        continue;
       }
+
+      const item: UploadItem = {
+        id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        file,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        status: 'uploading',
+        previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined,
+      };
+      newItems.push(item);
     }
-    setFiles((prev) => [...prev, ...newFiles].slice(0, 5));
+
+    if (newItems.length > 0) {
+      setUploadedFiles((prev) => [...prev, ...newItems]);
+      // Immediately start background Cloudinary upload
+      newItems.forEach((item) => {
+        uploadSingleFile(item);
+      });
+    }
+
+    e.target.value = '';
   };
+
+  const removeFile = (id: string) => {
+    setUploadedFiles((prev) => {
+      const target = prev.find((f) => f.id === id);
+      if (target?.previewUrl) {
+        URL.revokeObjectURL(target.previewUrl);
+      }
+      return prev.filter((f) => f.id !== id);
+    });
+  };
+
+  const retryFile = (id: string) => {
+    const item = uploadedFiles.find((f) => f.id === id);
+    if (!item) return;
+
+    setUploadedFiles((prev) =>
+      prev.map((f) => (f.id === id ? { ...f, status: 'uploading', errorMsg: undefined } : f))
+    );
+    uploadSingleFile(item);
+  };
+
+  // State checks for blocking progression
+  const isUploading = uploadedFiles.some((f) => f.status === 'uploading');
+  const hasErrors = uploadedFiles.some((f) => f.status === 'error');
+  const completedFiles = uploadedFiles.filter((f) => f.status === 'completed' && f.url);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Block submission if files are still actively uploading
+    if (isUploading) {
+      toast({
+        title: "Uploading in Progress",
+        description: "Please wait until all documents finish uploading before continuing.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Block if any failed files are left unresolved
+    if (hasErrors) {
+      toast({
+        title: "Failed Documents Detected",
+        description: "Please retry or remove failed files to continue.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const data = {
       chief_complaint: chiefComplaint,
@@ -85,13 +216,8 @@ export default function MedicalPreCheck() {
 
     setLoading(true);
 
-    // Upload files if any
-    const fileUrls: string[] = [];
-    for (const file of files) {
-      const path = `${patientId}/${Date.now()}-${file.name}`;
-      const { error: uploadError } = await api.prechecks.uploadFile(path, file);
-      if (!uploadError) fileUrls.push(path);
-    }
+    // Extract Cloudinary URLs from successfully uploaded documents
+    const fileUrls: string[] = completedFiles.map((f) => f.url as string);
 
     const { data: precheckId, error } = await api.prechecks.create({
       _patient_id: patientId,
@@ -205,33 +331,186 @@ export default function MedicalPreCheck() {
                   </div>
                 )}
 
-                <div>
-                  <Label>Upload Medical Documents (optional)</Label>
-                  <p className="mb-2 text-xs text-muted-foreground">PDF or images only, max 5MB each, up to 5 files</p>
-                  <div className="flex items-center gap-3">
-                    <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed px-4 py-3 text-sm text-muted-foreground hover:bg-secondary">
-                      <Upload className="h-4 w-4" />
-                      Choose Files
-                      <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png,.webp" multiple onChange={handleFileChange} />
-                    </label>
+                {/* Cloudinary Document Upload Section */}
+                <div className="rounded-xl border bg-card p-4 sm:p-5 shadow-sm space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-semibold">Upload Medical Documents (optional)</Label>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        PDF or images only (JPG, PNG, WebP), max 5MB each, up to 5 files
+                      </p>
+                    </div>
+                    <span className="text-xs font-medium text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
+                      {uploadedFiles.length}/5 files
+                    </span>
                   </div>
-                  {files.length > 0 && (
-                    <div className="mt-2 space-y-1">
-                      {files.map((f, i) => (
-                        <div key={i} className="flex items-center gap-2 text-sm">
-                          <span className="truncate">{f.name}</span>
-                          <button type="button" onClick={() => setFiles((prev) => prev.filter((_, j) => j !== i))}>
-                            <X className="h-3 w-3 text-muted-foreground" />
-                          </button>
+
+                  {uploadedFiles.length < 5 && (
+                    <div>
+                      <label className="flex w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border/80 bg-muted/20 px-6 py-6 text-center transition-all hover:border-primary/50 hover:bg-muted/40">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary mb-2">
+                          <CloudUpload className="h-6 w-6" />
+                        </div>
+                        <span className="text-sm font-medium text-foreground">
+                          Choose Files or Drag & Drop
+                        </span>
+                        <span className="mt-1 text-xs text-muted-foreground">
+                          Prescriptions, lab reports, or symptom photos
+                        </span>
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept=".pdf,.jpg,.jpeg,.png,.webp"
+                          multiple
+                          disabled={isUploading || uploadedFiles.length >= 5}
+                          onChange={handleFileChange}
+                        />
+                      </label>
+                    </div>
+                  )}
+
+                  {/* Uploaded File List */}
+                  {uploadedFiles.length > 0 && (
+                    <div className="space-y-2 pt-1">
+                      {uploadedFiles.map((item) => (
+                        <div
+                          key={item.id}
+                          className={`flex items-center justify-between rounded-lg border p-3 text-sm transition-colors ${
+                            item.status === 'completed'
+                              ? 'border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20'
+                              : item.status === 'error'
+                              ? 'border-destructive/30 bg-destructive/5'
+                              : 'border-primary/30 bg-primary/5'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            {/* Thumbnail or Icon */}
+                            {item.previewUrl ? (
+                              <img
+                                src={item.previewUrl}
+                                alt={item.name}
+                                className="h-10 w-10 rounded object-cover border shrink-0 bg-background"
+                              />
+                            ) : item.type === 'application/pdf' ? (
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400 font-bold text-xs">
+                                PDF
+                              </div>
+                            ) : (
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-muted text-muted-foreground">
+                                <FileText className="h-5 w-5" />
+                              </div>
+                            )}
+
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate font-medium text-foreground text-xs sm:text-sm">{item.name}</p>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                                <span>{formatBytes(item.size)}</span>
+                                <span>•</span>
+                                {item.status === 'uploading' && (
+                                  <span className="flex items-center gap-1 text-primary font-medium">
+                                    <Loader2 className="h-3 w-3 animate-spin shrink-0" /> Uploading to Cloudinary...
+                                  </span>
+                                )}
+                                {item.status === 'completed' && (
+                                  <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
+                                    <CheckCircle2 className="h-3 w-3 shrink-0" /> Uploaded
+                                  </span>
+                                )}
+                                {item.status === 'error' && (
+                                  <span className="flex items-center gap-1 text-destructive font-medium truncate">
+                                    <AlertCircle className="h-3 w-3 shrink-0" /> {item.errorMsg || 'Upload failed'}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 ml-2 shrink-0">
+                            {item.status === 'error' && (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                className="h-7 px-2 text-xs"
+                                onClick={() => retryFile(item.id)}
+                              >
+                                <RefreshCw className="h-3 w-3 mr-1" /> Retry
+                              </Button>
+                            )}
+                            {item.status === 'completed' && item.url && (
+                              <a
+                                href={item.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                                title="Open uploaded document in new tab"
+                              >
+                                <ExternalLink className="h-3.5 w-3.5" />
+                              </a>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => removeFile(item.id)}
+                              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                              title="Remove file"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
 
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Submitting..." : "Continue to Select Consultation"}
-                </Button>
+                {/* Submit / Proceed Section */}
+                <div className="space-y-2 pt-2">
+                  {isUploading && (
+                    <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-primary animate-pulse">
+                      <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+                      <span>
+                        Uploading documents in progress... You cannot proceed to the next step until the upload is completed.
+                      </span>
+                    </div>
+                  )}
+
+                  {hasErrors && (
+                    <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-xs text-destructive">
+                      <AlertCircle className="h-4 w-4 shrink-0" />
+                      <span>
+                        Some documents failed to upload. Please retry them or remove them before continuing.
+                      </span>
+                    </div>
+                  )}
+
+                  <Button
+                    type="submit"
+                    className="w-full py-6 text-base font-semibold shadow-md transition-all"
+                    disabled={loading || isUploading || hasErrors}
+                  >
+                    {loading ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="h-5 w-5 animate-spin" /> Saving Medical Pre-Check...
+                      </span>
+                    ) : isUploading ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="h-5 w-5 animate-spin" /> Uploading Documents... Please Wait
+                      </span>
+                    ) : hasErrors ? (
+                      <span className="flex items-center gap-2 text-destructive-foreground">
+                        Resolve Failed Uploads to Continue
+                      </span>
+                    ) : (
+                      "Continue to Select Consultation"
+                    )}
+                  </Button>
+
+                  {!isUploading && !loading && uploadedFiles.length === 0 && (
+                    <p className="text-center text-xs text-muted-foreground">
+                      Document upload is optional. You can proceed without uploading any files.
+                    </p>
+                  )}
+                </div>
               </form>
             </CardContent>
           </Card>

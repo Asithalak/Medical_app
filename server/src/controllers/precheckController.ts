@@ -1,5 +1,17 @@
 import type { Request, Response } from 'express';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 import { query, isDbConnected } from '../config/db.js';
+import { isCloudinaryConfigured, uploadBufferToCloudinary } from '../config/cloudinary.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const uploadsDir = path.join(__dirname, '../../uploads');
+
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 export async function createPrecheck(req: Request, res: Response): Promise<void> {
   const {
@@ -57,6 +69,68 @@ export async function uploadFile(req: Request, res: Response): Promise<void> {
     res.status(400).json({ message: 'No file uploaded' });
     return;
   }
-  const fileUrl = `/uploads/${req.file.filename}`;
-  res.json({ path: fileUrl });
+
+  try {
+    // Get buffer whether using memoryStorage or diskStorage
+    let buffer: Buffer;
+    if (req.file.buffer) {
+      buffer = req.file.buffer;
+    } else if (req.file.path && fs.existsSync(req.file.path)) {
+      buffer = await fs.promises.readFile(req.file.path);
+    } else {
+      res.status(400).json({ message: 'File buffer unavailable' });
+      return;
+    }
+
+    // 1. If Cloudinary is configured, upload directly to Cloudinary
+    if (isCloudinaryConfigured()) {
+      const result = await uploadBufferToCloudinary(
+        buffer,
+        req.file.originalname,
+        'medilanka/medical_documents'
+      );
+
+      console.log(`[Cloudinary] Successfully uploaded: ${result.original_filename} -> ${result.secure_url}`);
+
+      res.status(200).json({
+        success: true,
+        path: result.secure_url,
+        url: result.secure_url,
+        public_id: result.public_id,
+        filename: req.file.originalname,
+        format: result.format,
+        bytes: result.bytes,
+        resource_type: result.resource_type,
+        provider: 'cloudinary',
+      });
+      return;
+    }
+
+    // 2. Fallback to local storage if Cloudinary credentials are not configured yet
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    const sanitizedName = req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const localFilename = `${uniqueSuffix}-${sanitizedName}`;
+    const targetPath = path.join(uploadsDir, localFilename);
+
+    await fs.promises.writeFile(targetPath, buffer);
+
+    const localUrl = `/uploads/${localFilename}`;
+    console.log(`[Local Upload] Cloudinary credentials not detected in .env. Saved locally: ${localUrl}`);
+
+    res.status(200).json({
+      success: true,
+      path: localUrl,
+      url: localUrl,
+      filename: req.file.originalname,
+      bytes: req.file.size,
+      provider: 'local',
+      notice: 'Stored locally. Provide CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in server/.env for Cloudinary storage.',
+    });
+  } catch (err: any) {
+    console.error('[Upload Error]', err);
+    res.status(500).json({
+      message: 'Failed to upload document',
+      error: err.message || 'Unknown error occurred',
+    });
+  }
 }

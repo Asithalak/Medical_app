@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { api } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { maskPassport, maskPhone } from "@/lib/validators";
-import { Eye, Send, RefreshCw, Users, Clock, CheckCircle2, Mail, Loader2 } from "lucide-react";
+import { Eye, Send, RefreshCw, Users, Clock, CheckCircle2, Mail, Loader2, Paperclip, ZoomIn, Copy, FileText, ExternalLink } from "lucide-react";
 
 interface ConsultationRow {
   id: string;
@@ -49,6 +49,7 @@ interface ConsultationRow {
     medical_history: string | null;
     has_chronic_conditions: boolean;
     chronic_conditions_detail: string | null;
+    file_urls?: string[];
   } | null;
 }
 
@@ -74,6 +75,7 @@ export default function DoctorDashboard() {
   const [savingDiagnosis, setSavingDiagnosis] = useState(false);
   const [savingLink, setSavingLink] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const fetchConsultations = useCallback(async () => {
     const { data } = await api.consultations.getQueue();
@@ -280,7 +282,14 @@ export default function DoctorDashboard() {
                       {c.priority_score}
                     </div>
                     <div>
-                      <p className="font-medium">{c.patients?.full_name || "Patient"}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">{c.patients?.full_name || "Patient"}</p>
+                        {Array.isArray(c.medical_prechecks?.file_urls) && c.medical_prechecks.file_urls.length > 0 && (
+                          <span className="inline-flex items-center gap-1 rounded bg-primary/10 px-1.5 py-0.5 text-[11px] font-semibold text-primary" title={`${c.medical_prechecks.file_urls.length} medical document(s) uploaded`}>
+                            <Paperclip className="h-3 w-3" /> {c.medical_prechecks.file_urls.length}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-sm text-muted-foreground">
                         {c.consultation_types?.display_name || "Consultation"} · {c.patients?.nationality || "Visitor"}
                       </p>
@@ -338,6 +347,142 @@ export default function DoctorDashboard() {
                       {selected.medical_prechecks.medical_history && <div><span className="text-muted-foreground">History:</span> {selected.medical_prechecks.medical_history}</div>}
                       {selected.medical_prechecks.has_chronic_conditions && <div><span className="text-muted-foreground">Chronic:</span> {selected.medical_prechecks.chronic_conditions_detail}</div>}
                     </div>
+                  </div>
+                )}
+
+                {/* Uploaded Medical Documents / Attachments */}
+                {selected && (
+                  <div className="rounded-xl border bg-muted/20 p-4">
+                    <div className="mb-3 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Paperclip className="h-4 w-4 text-primary" />
+                        <h3 className="font-semibold text-sm">Uploaded Medical Documents & Reports</h3>
+                      </div>
+                      {(() => {
+                        const urls = Array.isArray(selected.medical_prechecks?.file_urls)
+                          ? selected.medical_prechecks.file_urls
+                          : typeof selected.medical_prechecks?.file_urls === 'string'
+                          ? JSON.parse(selected.medical_prechecks.file_urls || '[]')
+                          : [];
+                        return urls.length > 0 ? (
+                          <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20 font-medium">
+                            {urls.length} {urls.length === 1 ? "Document" : "Documents"}
+                          </Badge>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Optional</span>
+                        );
+                      })()}
+                    </div>
+
+                    {(() => {
+                      const urls: string[] = Array.isArray(selected.medical_prechecks?.file_urls)
+                        ? selected.medical_prechecks.file_urls
+                        : typeof selected.medical_prechecks?.file_urls === 'string'
+                        ? JSON.parse(selected.medical_prechecks.file_urls || '[]')
+                        : [];
+
+                      if (urls.length === 0) {
+                        return (
+                          <div className="rounded-lg border border-dashed py-3.5 text-center text-xs text-muted-foreground bg-background/50">
+                            No medical documents or lab reports attached for this consultation.
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          {urls.map((rawUrl, idx) => {
+                            const url = rawUrl.startsWith("http") ? rawUrl : `http://localhost:5000${rawUrl}`;
+                            const isImage = /\.(jpg|jpeg|png|webp|gif)($|\?)/i.test(url) || url.includes('/image/upload/');
+                            const rawName = url.split('/').pop()?.split('?')[0] || `Document ${idx + 1}`;
+                            const fileName = decodeURIComponent(rawName);
+
+                            return (
+                              <div
+                                key={idx}
+                                className="group relative flex flex-col justify-between overflow-hidden rounded-lg border bg-card p-3 shadow-xs transition-all hover:border-primary/40 hover:shadow-sm"
+                              >
+                                <div className="flex items-start gap-3">
+                                  {/* Preview thumbnail or PDF Icon */}
+                                  {isImage ? (
+                                    <div
+                                      className="relative h-14 w-14 shrink-0 cursor-pointer overflow-hidden rounded-md border bg-muted"
+                                      onClick={() => setPreviewImage(url)}
+                                      title="Click to zoom image"
+                                    >
+                                      <img
+                                        src={url}
+                                        alt={fileName}
+                                        className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                                      />
+                                      <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100">
+                                        <ZoomIn className="h-4 w-4 text-white" />
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-red-100 text-red-600 dark:bg-red-950/60 dark:text-red-400 font-bold text-xs">
+                                      <FileText className="h-6 w-6" />
+                                    </div>
+                                  )}
+
+                                  <div className="min-w-0 flex-1">
+                                    <p className="truncate text-xs font-semibold text-foreground" title={fileName}>
+                                      {fileName}
+                                    </p>
+                                    <p className="mt-0.5 text-[11px] text-muted-foreground flex items-center gap-1">
+                                      {url.includes('cloudinary.com') ? (
+                                        <span className="inline-flex items-center text-emerald-600 dark:text-emerald-400 font-medium">
+                                          Cloudinary Secure Cloud
+                                        </span>
+                                      ) : (
+                                        <span>Medical Attachment</span>
+                                      )}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="mt-3 flex items-center gap-2 border-t pt-2">
+                                  {isImage && (
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-7 text-xs flex-1"
+                                      onClick={() => setPreviewImage(url)}
+                                    >
+                                      <ZoomIn className="mr-1 h-3.5 w-3.5" /> Preview
+                                    </Button>
+                                  )}
+                                  <Button
+                                    asChild
+                                    size="sm"
+                                    variant={isImage ? "ghost" : "outline"}
+                                    className="h-7 text-xs flex-1"
+                                  >
+                                    <a href={url} target="_blank" rel="noopener noreferrer">
+                                      <ExternalLink className="mr-1 h-3.5 w-3.5" /> Open
+                                    </a>
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(url);
+                                      toast({ title: "Link Copied", description: "Document URL copied to clipboard." });
+                                    }}
+                                    title="Copy direct document URL"
+                                  >
+                                    <Copy className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
 
@@ -446,6 +591,31 @@ export default function DoctorDashboard() {
                 </div>
               </div>
             </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Document Image Zoom / Lightbox Dialog */}
+      <Dialog open={Boolean(previewImage)} onOpenChange={(open) => !open && setPreviewImage(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] p-4 flex flex-col items-center">
+          <DialogHeader className="w-full flex flex-row items-center justify-between pb-2">
+            <DialogTitle className="text-base font-semibold">Medical Document Preview</DialogTitle>
+            {previewImage && (
+              <Button asChild size="sm" variant="outline" className="h-8">
+                <a href={previewImage} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="mr-1 h-3.5 w-3.5" /> Open Full Image
+                </a>
+              </Button>
+            )}
+          </DialogHeader>
+          {previewImage && (
+            <div className="relative flex-1 w-full flex items-center justify-center overflow-auto rounded-lg bg-black/5 p-2">
+              <img
+                src={previewImage}
+                alt="Document preview"
+                className="max-h-[70vh] w-auto max-w-full rounded object-contain shadow-md"
+              />
+            </div>
           )}
         </DialogContent>
       </Dialog>
