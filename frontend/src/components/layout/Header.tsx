@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Plus } from "lucide-react";
+import { Menu } from "lucide-react";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -19,13 +19,12 @@ export default function Header() {
     <header className="fixed top-5 left-1/2 z-50 -translate-x-1/2 w-[calc(100%-2rem)] max-w-5xl print:hidden">
       <div className="flex h-14 items-center justify-between rounded-full bg-white/80 px-4 shadow-lg shadow-primary/5 backdrop-blur-xl border border-white/40 md:px-6">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2.5 shrink-0">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-logo">
-            <Plus className="h-4 w-4 text-white" strokeWidth={3} />
-          </div>
-          <span className="font-display text-lg font-bold text-foreground">
-            Medi Lanka
-          </span>
+        <Link to="/" className="flex items-center shrink-0">
+          <img
+            src="/Group 5 (1).svg"
+            alt="ChatDr Logo"
+            className="h-10 w-auto object-contain transition-transform hover:scale-105"
+          />
         </Link>
 
         {/* Desktop nav */}
