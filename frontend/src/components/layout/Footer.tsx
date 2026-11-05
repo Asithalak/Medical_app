@@ -3,64 +3,62 @@ import { Phone } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="relative bg-[#041d2d] text-white overflow-hidden print:hidden">
+    <footer className="relative bg-gradient-to-b from-[#012f49] via-[#014972] to-[#0168a3] text-white overflow-hidden print:hidden">
       {/* Background CHAT DR watermark */}
       <div
-        className="absolute inset-x-0 bottom-1 flex justify-center pointer-events-none select-none overflow-hidden"
+        className="absolute inset-x-0 bottom-2 md:bottom-3 flex justify-center pointer-events-none select-none overflow-hidden"
         aria-hidden="true"
       >
-        <span className="text-[85px] sm:text-[130px] md:text-[170px] lg:text-[210px] font-black tracking-widest text-[#0b2d42] opacity-40 uppercase leading-none">
+        <span className="text-[110px] sm:text-[160px] md:text-[210px] lg:text-[260px] font-black tracking-[0.06em] text-[#00243a] opacity-25 uppercase leading-none whitespace-nowrap">
           CHAT DR
         </span>
       </div>
 
-      <div className="container relative z-10 mx-auto px-4 py-12 md:py-16 max-w-5xl">
-        <div className="grid gap-8 md:grid-cols-4">
-          {/* Brand Info */}
-          <div className="md:pr-4">
-            <Link to="/" className="inline-flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0284c7]/20 border border-[#0284c7]/40">
-                <img
-                  src="/logo-icon.svg"
-                  alt="ChatDr Logo"
-                  className="h-5 w-5 object-contain"
-                />
-              </div>
-              <span className="font-display text-sm font-bold tracking-tight text-white">
+      <div className="container relative z-10 mx-auto px-6 py-12 md:py-16 max-w-6xl">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-12 items-start">
+          {/* Brand Info (Col 1) */}
+          <div className="lg:col-span-5 pr-0 lg:pr-6">
+            <Link to="/" className="inline-flex items-center gap-3">
+              <img
+                src="/image 26.svg"
+                alt="ChatDr Logo"
+                className="h-11 sm:h-12 w-auto object-contain"
+              />
+              <span className="font-display text-lg sm:text-xl font-bold tracking-tight text-white">
                 Medi Lanka / Embassy care
               </span>
             </Link>
-            <p className="mt-3.5 text-xs text-slate-400 leading-relaxed">
-              Dedicated private telemedicine sanctuary for international diplomatic staff, foreign passport holders, and travellers visiting sri lanka.
+            <p className="mt-3.5 text-xs sm:text-sm text-slate-300/90 leading-relaxed max-w-sm">
+              Dedicated private telemedicine sanctuary for international diplomatic staff, foreign passport holders, and travelers visiting sri lanka.
             </p>
           </div>
 
-          {/* Quick Links */}
-          <div>
-            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-300">
+          {/* Quick Links (Col 2) */}
+          <div className="lg:col-span-2">
+            <h4 className="mb-3 text-sm font-semibold text-white">
               Quick Links
             </h4>
-            <div className="flex flex-col gap-2.5 text-xs text-slate-400">
+            <div className="flex flex-col gap-2 text-xs sm:text-sm text-slate-300">
               <Link to="/how-it-works" className="hover:text-white transition-colors">
-                How It Works
+                How it works
               </Link>
               <Link to="/faq" className="hover:text-white transition-colors">
                 FAQ
               </Link>
               <Link to="/contact" className="hover:text-white transition-colors">
-                Contact Us
+                Contact us
               </Link>
             </div>
           </div>
 
-          {/* Legal */}
-          <div>
-            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-300">
+          {/* Legal (Col 3) */}
+          <div className="lg:col-span-2">
+            <h4 className="mb-3 text-sm font-semibold text-white">
               Legal
             </h4>
-            <div className="flex flex-col gap-2.5 text-xs text-slate-400">
+            <div className="flex flex-col gap-2 text-xs sm:text-sm text-slate-300">
               <Link to="/privacy-policy" className="hover:text-white transition-colors">
-                Privacy Policy
+                Privacy policy
               </Link>
               <Link to="/emergency-disclaimer" className="hover:text-white transition-colors">
                 Emergency disclaimer
@@ -68,29 +66,29 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Emergency */}
-          <div>
-            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-300">
+          {/* Emergency (Col 4) */}
+          <div className="lg:col-span-3">
+            <h4 className="mb-3 text-sm font-semibold text-white">
               Emergency
             </h4>
-            <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1.5 text-[11px] text-slate-200 shadow-sm">
-              <Phone className="h-3 w-3 text-sky-400 shrink-0" />
-              <span>National Emergency Service : 1990 (Suwa Seriya)</span>
+            <div className="mt-1 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs sm:text-sm font-medium text-slate-900 shadow-md">
+              <Phone className="h-4 w-4 text-emerald-600 shrink-0 fill-emerald-600" />
+              <span>National Emergency Service: 1990 (Suwa Seriya)</span>
             </div>
           </div>
         </div>
 
-        {/* Bottom copyright bar */}
-        <div className="mt-12 border-t border-white/10 pt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-[11px] text-slate-400">
+        {/* Bottom Bar without horizontal border line */}
+        <div className="mt-14 md:mt-18 flex flex-col md:flex-row items-center justify-between gap-4 text-xs sm:text-sm text-slate-300/90">
           <div>
-            © {new Date().getFullYear()} Medi Lanka Healthcare. All Rights Reserved. Colombo, Sri Lanka.
+            © 2025 Medi Lanka Healthcare. All Rights Reserved. Colombo, Sri Lanka.
           </div>
-          <div className="flex items-center gap-4 text-slate-400">
+          <div className="flex items-center gap-6 text-slate-300/90">
             <Link to="/privacy-policy" className="hover:text-white transition-colors">
               Privacy Policy
             </Link>
             <span>Terms Of Care</span>
-            <span>Complaints Guidelines</span>
+            <span>Consular Guidelines</span>
           </div>
         </div>
       </div>
