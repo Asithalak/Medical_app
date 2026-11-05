@@ -121,7 +121,7 @@ export default function Index() {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="rounded-full bg-white hover:bg-slate-50 text-[#0b495c] border-slate-100 shadow-md shadow-slate-200/60 text-sm sm:text-base font-medium px-6 py-6 inline-flex items-center gap-2 transition-all"
+                    className="rounded-full bg-white hover:bg-[#085e9e] text-[#0b495c] border-slate-100 shadow-md shadow-slate-200/60 text-sm sm:text-base font-medium px-6 py-6 inline-flex items-center gap-2 transition-all"
                   >
                     <ShieldCheck className="h-4 w-4 text-[#0a71bc]" />
                     Track My Consultation
