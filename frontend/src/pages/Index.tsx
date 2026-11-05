@@ -10,7 +10,6 @@ import {
   Globe,
   ArrowRight,
   FileText,
-  MapPin,
   Stethoscope,
   AlertCircle,
 } from "lucide-react";
@@ -87,44 +86,44 @@ export default function Index() {
         <div className="pointer-events-none absolute top-1/3 -left-24 h-96 w-96 rounded-full bg-blue-100/30 blur-3xl" />
 
         {/* Hero Section */}
-        <section className="container mx-auto px-4 pt-12 pb-14 md:pt-16 md:pb-18 max-w-5xl">
-          <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-8">
+        <section className="container mx-auto px-4 pt-10 pb-14 md:pt-16 md:pb-18 max-w-6xl">
+          <div className="grid items-center gap-8 lg:grid-cols-12 lg:gap-10">
             {/* Left Content */}
             <div className="flex flex-col items-start text-left lg:col-span-7">
               {/* Badge */}
-              <div className="mb-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#0284c7]">
+              <div className="mb-4 inline-flex items-center rounded-full bg-[#e8f4f9] px-4 py-1.5 text-xs sm:text-sm font-medium text-[#0578aa]">
                 <span>Embassy-Recommended Doctor</span>
               </div>
 
               {/* Headline */}
-              <h1 className="font-display text-3xl sm:text-4xl lg:text-[2.85rem] font-extrabold leading-[1.18] tracking-tight text-[#0f3d4c]">
-                trusted medical care for everyone from anywhere
+              <h1 className="font-display text-3xl sm:text-4xl lg:text-[3.25rem] font-bold leading-[1.15] tracking-tight text-[#0b495c]">
+                trusted medical care for<br className="hidden sm:inline" /> everyone from anywhere
               </h1>
 
               {/* Subtitle */}
-              <p className="mt-4 text-xs sm:text-sm text-slate-500 leading-relaxed max-w-lg">
+              <p className="mt-5 text-sm sm:text-base md:text-lg text-[#526b7a] leading-relaxed max-w-lg">
                 get professional medical care and online consultations whenever you need them.
               </p>
 
               {/* CTA Buttons */}
-              <div className="mt-8 flex flex-wrap items-center gap-3.5">
+              <div className="mt-8 flex flex-wrap items-center gap-4">
                 <Link to="/consultation/intake">
                   <Button
-                    size="sm"
-                    className="rounded-full bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs sm:text-sm font-semibold px-5 py-2.5 shadow-md shadow-sky-500/20 inline-flex items-center gap-1.5 transition-all"
+                    size="lg"
+                    className="rounded-full bg-[#0a71bc] hover:bg-[#085e9e] text-white text-sm sm:text-base font-medium px-7 py-6 shadow-lg shadow-[#0a71bc]/25 inline-flex items-center gap-2 transition-all"
                   >
                     Start Consultation
-                    <ArrowRight className="h-3.5 w-3.5" />
+                    <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
 
                 <Link to="/track">
                   <Button
-                    size="sm"
+                    size="lg"
                     variant="outline"
-                    className="rounded-full bg-white hover:bg-slate-50 text-slate-700 border-slate-200/90 text-xs sm:text-sm font-medium px-4 py-2.5 shadow-sm inline-flex items-center gap-1.5 transition-all"
+                    className="rounded-full bg-white hover:bg-slate-50 text-[#0b495c] border-slate-100 shadow-md shadow-slate-200/60 text-sm sm:text-base font-medium px-6 py-6 inline-flex items-center gap-2 transition-all"
                   >
-                    <ClipboardList className="h-3.5 w-3.5 text-[#0284c7]" />
+                    <ShieldCheck className="h-4 w-4 text-[#0a71bc]" />
                     Track My Consultation
                   </Button>
                 </Link>
@@ -132,22 +131,18 @@ export default function Index() {
             </div>
 
             {/* Right Hero Image Card */}
-            <div className="lg:col-span-5">
-              <div className="relative mx-auto w-full max-w-sm sm:max-w-md rounded-[1.75rem] bg-white p-2.5 shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
-                <img
-                  src="/home.jpeg"
-                  alt="Doctor Consultation"
-                  className="h-80 sm:h-96 w-full object-cover rounded-2xl"
-                />
-
-               
-              </div>
+            <div className="flex justify-center lg:col-span-5 lg:justify-end">
+              <img
+                src="/Group 14.png"
+                alt="Trusted medical care for everyone from anywhere - Instant Care Wherever You Stay"
+                className="w-full max-w-sm sm:max-w-md lg:max-w-[480px] h-auto object-contain transition-transform hover:scale-[1.01]"
+              />
             </div>
           </div>
         </section>
 
         {/* Stats Section Bar */}
-        <section className="container mx-auto px-4 my-6 md:my-10 max-w-4xl">
+        <section className="container mx-auto px-4 my-6 md:my-10 max-w-5xl">
           <div className="rounded-2xl md:rounded-3xl bg-[#dbe8ee] p-6 md:p-8 shadow-sm">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-4 text-center">
               <div>
