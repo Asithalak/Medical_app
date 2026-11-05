@@ -11,7 +11,7 @@ export default function LoadingScreen({
   onComplete,
   speed = 90,
 }: LoadingScreenProps) {
-  const [progress, setProgress] = useState(8);
+  const [progress, setProgress] = useState(5);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -22,13 +22,15 @@ export default function LoadingScreen({
           return 100;
         }
         // Smooth random increment matching video playback
-        const step = Math.floor(Math.random() * 12) + 7;
+        const step = Math.floor(Math.random() * 10) + 6;
         return Math.min(prev + step, 100);
       });
     }, speed);
 
     return () => clearInterval(interval);
   }, [speed, onComplete]);
+
+  const fillPercentage = Math.min(Math.max(progress, 0), 100);
 
   return (
     <div
@@ -38,12 +40,99 @@ export default function LoadingScreen({
       }}
     >
       <div className="relative flex flex-col items-center justify-center max-w-lg w-full px-6 text-center animate-in zoom-in-95 duration-400">
-        {/* Loading Branding Graphic */}
-        <img
-          src="/Loading.jpg"
-          alt="ChatDr - A doctor when you need one"
-          className="w-full max-w-md h-auto object-contain rounded-2xl shadow-2xl drop-shadow-[0_20px_35px_rgba(0,0,0,0.35)]"
-        />
+        {/* Loading Branding Card */}
+        <div className="relative w-full max-w-md aspect-[1280/1024] rounded-2xl overflow-hidden shadow-2xl drop-shadow-[0_20px_35px_rgba(0,0,0,0.35)]">
+          {/* Card background with Doctor icon, subtitle, and stethoscope graphic */}
+          <img
+            src="/Loading_bg.jpg"
+            alt="ChatDr - A doctor when you need one"
+            className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+          />
+
+          {/* Animated "ChatDr" Wordmark with Left-to-Right White Sweep */}
+          <svg
+            className="absolute left-1/2 -translate-x-1/2 pointer-events-none select-none"
+            style={{
+              top: "33.2%",
+              width: "44%",
+              height: "11.2%",
+            }}
+            viewBox="0 0 540 115"
+          >
+            <defs>
+              {/* Left-to-right sweep gradient tied to progress */}
+              <linearGradient id="chatdrProgressFill" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#ffffff" />
+                <stop offset={`${Math.max(0, fillPercentage - 4)}%`} stopColor="#ffffff" />
+                <stop offset={`${Math.min(100, fillPercentage + 4)}%`} stopColor="rgba(255, 255, 255, 0.22)" />
+                <stop offset="100%" stopColor="rgba(255, 255, 255, 0.22)" />
+              </linearGradient>
+
+              {/* Card drop shadow for depth */}
+              <filter id="chatdrShadow" x="-10%" y="-10%" width="120%" height="130%">
+                <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="rgba(0, 0, 0, 0.3)" />
+              </filter>
+
+              {/* Shimmer sweep light that travels left-to-right across the text */}
+              <linearGradient id="chatdrShimmer" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="rgba(255,255,255,0)" />
+                <stop offset="50%" stopColor="rgba(255,255,255,0.75)" />
+                <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+                <animate
+                  attributeName="x1"
+                  from="-100%"
+                  to="200%"
+                  dur="1.8s"
+                  repeatCount="indefinite"
+                />
+                <animate
+                  attributeName="x2"
+                  from="0%"
+                  to="300%"
+                  dur="1.8s"
+                  repeatCount="indefinite"
+                />
+              </linearGradient>
+
+              <clipPath id="chatdrFilledClip">
+                <rect x="0" y="0" width={`${fillPercentage}%`} height="115" />
+              </clipPath>
+            </defs>
+
+            {/* Base Letters with Left-to-Right White Fill Animation */}
+            <text
+              x="50%"
+              y="88"
+              textAnchor="middle"
+              fontFamily="'Poppins', sans-serif"
+              fontWeight="800"
+              fontSize="94"
+              letterSpacing="-1.5"
+              fill="url(#chatdrProgressFill)"
+              filter="url(#chatdrShadow)"
+            >
+              ChatDr
+            </text>
+
+            {/* Continuous dynamic shimmer shine traveling across filled letters */}
+            {fillPercentage > 5 && (
+              <text
+                x="50%"
+                y="88"
+                textAnchor="middle"
+                fontFamily="'Poppins', sans-serif"
+                fontWeight="800"
+                fontSize="94"
+                letterSpacing="-1.5"
+                fill="url(#chatdrShimmer)"
+                clipPath="url(#chatdrFilledClip)"
+                className="pointer-events-none mix-blend-overlay"
+              >
+                ChatDr
+              </text>
+            )}
+          </svg>
+        </div>
 
         {/* Animated Progress Bar (Matching Video) */}
         <div className="mt-7 w-full max-w-xs sm:max-w-sm flex flex-col items-center">
@@ -67,4 +156,3 @@ export default function LoadingScreen({
     </div>
   );
 }
-
