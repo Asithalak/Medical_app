@@ -273,7 +273,7 @@ export default function Index() {
             <Link to="/consultation/intake">
               <Button
                 size="sm"
-                className="mt-6 rounded-full bg-white text-[#0f3d4c] hover:bg-slate-100 text-xs md:text-sm font-semibold px-6 py-2.5 shadow-md inline-flex items-center gap-1.5 transition-all"
+                className="mt-6 rounded-full hover:bg-[#085e9e] bg-white text-[#0f3d4c] text-xs md:text-sm font-semibold px-6 py-2.5 shadow-md inline-flex items-center gap-1.5 transition-all"
               >
                 start consultation now
                 <ArrowRight className="h-3.5 w-3.5" />
