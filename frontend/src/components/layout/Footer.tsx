@@ -6,10 +6,16 @@ export default function Footer() {
     <footer className="relative bg-gradient-to-b from-[#012f49] via-[#014972] to-[#0168a3] text-white overflow-hidden print:hidden">
       {/* Background CHAT DR watermark */}
       <div
-        className="absolute inset-x-0 bottom-2 md:bottom-3 flex justify-center pointer-events-none select-none overflow-hidden"
+        className="absolute inset-x-0 bottom-0 sm:bottom-0 md:bottom-1 flex justify-center pointer-events-none select-none px-4 z-0 translate-y-1 sm:translate-y-2"
         aria-hidden="true"
       >
-        <span className="text-[110px] sm:text-[160px] md:text-[210px] lg:text-[260px] font-black tracking-[0.06em] text-[#00243a] opacity-25 uppercase leading-none whitespace-nowrap">
+        <span
+          className="font-display font-extrabold text-[10vw] sm:text-[11vw] md:text-[12vw] lg:text-[165px] xl:text-[195px] tracking-[0.08em] sm:tracking-[0.12em] md:tracking-[0.15em] uppercase leading-none whitespace-nowrap bg-gradient-to-b from-white/25 via-white/10 to-transparent bg-clip-text text-transparent select-none"
+          style={{
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}
+        >
           CHAT DR
         </span>
       </div>
@@ -87,7 +93,9 @@ export default function Footer() {
             <Link to="/privacy-policy" className="hover:text-white transition-colors">
               Privacy Policy
             </Link>
-            <span>Terms Of Care</span>
+            <Link to="/emergency-disclaimer" className="hover:text-white transition-colors">
+            Terms Of Care
+            </Link>
             <span>Consular Guidelines</span>
           </div>
         </div>
