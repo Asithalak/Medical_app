@@ -9,7 +9,7 @@ const navLinks = [
   { href: "/how-it-works", label: "How It Works" },
   { href: "/faq", label: "FAQ" },
   { href: "/contact", label: "Contact Us" },
-  { href: "/login", label: "Doctor Login" },
+  { href: "/login", label: "" },
 ];
 
 export default function Header() {
