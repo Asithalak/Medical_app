@@ -46,32 +46,32 @@ const steps = [
 
 const features = [
   {
-    icon: ClipboardList,
+    icon: "/Overlay (5).svg",
     title: "Simple Intake",
-    desc: "quick structured medical forms made specifically for international travelers on the move.",
+    desc: "quick, structured medical forms made specifically for international travelers on the move.",
   },
   {
-    icon: ShieldCheck,
+    icon: "/Overlay (4).svg",
     title: "Secure & Private",
-    desc: "medical data and private records stored strictly compliant to gdpr and international privacy standards.",
+    desc: "medical intake and records encrypted strictly compliant to gdpr and international privacy standards.",
   },
   {
-    icon: CreditCard,
+    icon: "/Overlay (3).svg",
     title: "Easy Payment",
     desc: "seamless payment with foreign debit or credit cards via stripe, apple pay, and google pay.",
   },
   {
-    icon: Video,
+    icon: "/Overlay (2).svg",
     title: "Virtual Consult",
     desc: "connect in crystal clear hd video from your hotel room or villa anywhere across sri lanka.",
   },
   {
-    icon: Stethoscope,
+    icon: "/Overlay (1).svg",
     title: "Priority Access",
     desc: "expedited electronic prescriptions, direct private hospital referrals & pharmacy delivery support.",
   },
   {
-    icon: Globe,
+    icon: "/Overlay.svg",
     title: "Multilingual Care",
     desc: "fluent english consultations with german, french, and russian communication coordinators on standby.",
   },
@@ -122,7 +122,7 @@ export default function Index() {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="w-full sm:w-auto rounded-full bg-white hover:bg-slate-50 text-[#0a71bc] border-slate-100 shadow-sm shadow-slate-200/60 text-sm sm:text-base font-medium px-6 py-3.5 sm:py-6 inline-flex items-center justify-center gap-2 transition-all"
+                    className="w-full sm:w-auto rounded-full bg-white hover:bg-[#085e9e] text-[#0a71bc] border-slate-100 shadow-sm shadow-slate-200/60 text-sm sm:text-base font-medium px-6 py-3.5 sm:py-6 inline-flex items-center justify-center gap-2 transition-all"
                   >
                     <ShieldCheck className="h-4 w-4 text-[#0a71bc]" />
                     <span>Track My Consultation</span>
@@ -229,36 +229,35 @@ export default function Index() {
         </section>
 
         {/* Why Choose Us Section */}
-        <section className="container mx-auto px-4 py-12 md:py-16 max-w-5xl">
+        <section className="container mx-auto px-4 py-12 md:py-18 max-w-6xl">
           <div className="text-center">
-            <h2 className="font-display text-2xl md:text-3xl font-extrabold text-[#0f3d4c] tracking-tight">
+            <h2 className="font-display text-3xl sm:text-4xl md:text-[40px] font-bold text-[#004767] tracking-tight">
               Why Choose Us
             </h2>
-            <p className="mx-auto mt-2 text-xs md:text-sm text-slate-500 max-w-xl">
+            <p className="mx-auto mt-2.5 sm:mt-3 text-xs sm:text-sm md:text-base text-[#526b7a] max-w-xl">
               Clinical excellence tailored for foreign visitors and embassy personnel
             </p>
           </div>
 
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((f) => {
-              const Icon = f.icon;
-              return (
-                <div
-                  key={f.title}
-                  className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e0f2fe] text-[#0284c7]">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <h3 className="font-display text-base font-bold text-[#0f3d4c] mt-4">
-                    {f.title}
-                  </h3>
-                  <p className="mt-2 text-xs md:text-sm text-slate-500 leading-relaxed">
-                    {f.desc}
-                  </p>
-                </div>
-              );
-            })}
+          <div className="mt-10 md:mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {features.map((f) => (
+              <div
+                key={f.title}
+                className="rounded-2xl sm:rounded-3xl border border-slate-100 bg-white p-6 sm:p-7 md:p-8 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-md transition-all duration-200 flex flex-col items-start text-left"
+              >
+                <img
+                  src={f.icon}
+                  alt={f.title}
+                  className="h-11 w-11 object-contain shrink-0"
+                />
+                <h3 className="font-display text-lg sm:text-xl font-bold text-[#0b2838] mt-5 sm:mt-6 tracking-tight">
+                  {f.title}
+                </h3>
+                <p className="mt-2.5 sm:mt-3 text-xs sm:text-sm text-[#526b7a] leading-relaxed">
+                  {f.desc}
+                </p>
+              </div>
+            ))}
           </div>
         </section>
 
