@@ -91,40 +91,41 @@ export default function Index() {
             {/* Left Content */}
             <div className="flex flex-col items-start text-left lg:col-span-7">
               {/* Badge */}
-              <div className="mb-4 inline-flex items-center rounded-full bg-[#e8f4f9] px-4 py-1.5 text-xs sm:text-sm font-medium text-[#0578aa]">
+              <div className="mb-3.5 sm:mb-4 inline-flex items-center rounded-full bg-[#e8f4f9] px-3.5 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium text-[#0578aa]">
                 <span>Embassy-Recommended Doctor</span>
               </div>
 
               {/* Headline */}
-              <h1 className="font-display text-3xl sm:text-4xl lg:text-[3.25rem] font-bold leading-[1.15] tracking-tight text-[#0b495c]">
-                trusted medical care for<br className="hidden sm:inline" /> everyone from anywhere
+              <h1 className="font-display text-[27px] sm:text-4xl lg:text-[3.25rem] font-bold leading-[1.18] sm:leading-[1.15] tracking-tight text-[#0b495c]">
+                trusted medical care<span className="sm:hidden"><br />for everyone from<br />anywhere</span>
+                <span className="hidden sm:inline"> for<br />everyone from anywhere</span>
               </h1>
 
               {/* Subtitle */}
-              <p className="mt-5 text-sm sm:text-base md:text-lg text-[#526b7a] leading-relaxed max-w-lg">
+              <p className="mt-3.5 sm:mt-5 text-[14px] sm:text-base md:text-lg text-[#526b7a] leading-relaxed max-w-[285px] sm:max-w-lg">
                 get professional medical care and online consultations whenever you need them.
               </p>
 
               {/* CTA Buttons */}
-              <div className="mt-8 flex flex-wrap items-center gap-4">
-                <Link to="/consultation/intake">
+              <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                <Link to="/consultation/intake" className="w-full sm:w-auto">
                   <Button
                     size="lg"
-                    className="rounded-full bg-[#0a71bc] hover:bg-[#085e9e] text-white text-sm sm:text-base font-medium px-7 py-6 shadow-lg shadow-[#0a71bc]/25 inline-flex items-center gap-2 transition-all"
+                    className="w-full sm:w-auto rounded-full bg-[#0a71bc] hover:bg-[#085e9e] text-white text-sm sm:text-base font-medium px-7 py-3.5 sm:py-6 shadow-md shadow-[#0a71bc]/25 inline-flex items-center justify-center gap-2 transition-all"
                   >
-                    Start Consultation
+                    <span>Start Consultation</span>
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
 
-                <Link to="/track">
+                <Link to="/track" className="w-full sm:w-auto">
                   <Button
                     size="lg"
                     variant="outline"
-                    className="rounded-full bg-white hover:bg-[#085e9e] text-[#0b495c] border-slate-100 shadow-md shadow-slate-200/60 text-sm sm:text-base font-medium px-6 py-6 inline-flex items-center gap-2 transition-all"
+                    className="w-full sm:w-auto rounded-full bg-white hover:bg-slate-50 text-[#0a71bc] border-slate-100 shadow-sm shadow-slate-200/60 text-sm sm:text-base font-medium px-6 py-3.5 sm:py-6 inline-flex items-center justify-center gap-2 transition-all"
                   >
                     <ShieldCheck className="h-4 w-4 text-[#0a71bc]" />
-                    Track My Consultation
+                    <span>Track My Consultation</span>
                   </Button>
                 </Link>
               </div>
